@@ -1,0 +1,112 @@
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+
+import com.csvreader.CsvReader;
+
+
+public class modelextractor {
+	
+	
+	static String[] event1 = {"Bolivia","President","Morales","RT","interview","offer","Snowden","humanitarian","asylum","#Morales","#Snowden"} ;
+	static String[] event1files = {"F://tweetdata/2013_07_01_19.csv","F://tweetdata/2013_07_01_20.csv","F://tweetdata/2013_07_01_21.csv","F://tweetdata/2013_07_01_22.csv","F://tweetdata/2013_07_01_23.csv"} ;
+	
+	
+public static void main(String[] args) {
+		
+	startReading(); 
+		//createDuckTables();
+		//loadbw_poiDataIntoTables();
+		//loadbw_highwayDataIntoTables();
+		//loadbw_locationDataIntoTables();
+		//loadDuckDataIntoTables();
+	}
+	
+	
+	public static void startReading ()
+	{
+		int idCount = 0;
+		for (int t=0; t<event1files.length; t++)
+		{
+		
+		try {
+			//CsvReader products = new CsvReader("D://workspace/workspace_netbeans/GIS/data/bw-coastline.txt");
+			CsvReader products = new CsvReader(event1files[t],'\t');
+		
+			products.readHeaders();
+		for ( int i = 0; i<products.getHeaders().length;i++)
+			{
+			System.out.println(products.getHeaders()[i]);
+			}
+			
+
+			
+			
+				while (products.readRecord())
+				{
+					String creationDate = products.get("TWEET_CREATIONDATE");
+					String tweetContent = products.get("TWEET_CONTENT");
+					String tweetUser = products.get("USER_NAME");
+					String tweetScreenName = products.get("USER_SCREENNAME");
+					String coordinates = products.get("TWEET_COORDS");
+					String Userstatusescount = products.get("USER_STATUSESCOUNT");
+					String UserFollowers = products.get("USER_FOLLOWERSCOUNT");
+					String UserLocation = products.get("USER_LOCATION");
+					String UserFriendscount = products.get("USER_FRIENDSCOUNT");
+					String tweetID = products.get("TWEET_ID");
+					
+					
+					
+					if( coordinates==null)
+					{
+					continue;
+					
+					
+					
+					}
+					int keywordcount=0;
+					for (int s=0; s<event1.length; s++)
+					{
+						if(tweetContent.contains(event1[s]))
+						{
+							keywordcount++;
+						}
+					}
+					
+					if(keywordcount>2)
+					{
+						System.out.println("Test"+tweetContent);
+						idCount++;
+					}
+					
+					
+					
+					
+				
+				}
+				
+		
+	
+			products.close();
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	
+	}
+		System.out.println(idCount);
+		
+	}
+	
+
+	
+		   
+
+		 
+	
+
+
+
+}

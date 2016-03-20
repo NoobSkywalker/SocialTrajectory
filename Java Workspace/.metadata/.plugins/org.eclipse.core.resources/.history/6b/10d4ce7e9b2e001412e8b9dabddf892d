@@ -1,0 +1,182 @@
+package Tweetmodelextractor;
+
+import java.math.BigInteger;
+
+import java.sql.ResultSet;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+
+
+public class TweetModel {
+
+	
+	public String keywords;
+	
+	public int credibility;
+	public float contagionRate;
+	
+	
+	public String parent;
+	
+	public int hits;
+	
+	public boolean retweeted=false;
+	public String tweetplace;
+	public int tweetretweetcount;
+	public BigInteger tweetreplytostatus;
+	public String tweetreplytousername;
+	
+	
+	public java.sql.Timestamp date;
+	public java.util.Date tempdate;
+	
+	public double longitude;
+	public double latitude;
+	public boolean containsurl;
+	
+	public Boolean authordescription =false;
+	public String Content;
+	public String Author;
+	public String followers;
+	public String location;
+	public int friendscount;
+	public int listedcount;
+	public String screenname;
+
+	public String lang;
+	public int userstatscount;
+	public java.sql.Timestamp userdate;
+	public BigInteger id;
+	
+	public TweetModel (String keyw, String tweetdate, String geolocation, String cont,String auth,String screenn, String followr, 
+			String friendsc,String Userstatusescount,String language, String tweetid,String tweetpl,String tweetrtc, String tweetrtostat,String tweetrtousername, String userDesc, String userCreationDate, String listcount )
+	{
+		
+		this.keywords=keyw;
+		
+		this.credibility=0;
+		this.contagionRate=0;
+		
+		this.id = new BigInteger(tweetid);
+		this.screenname=screenn;
+		this.lang=language;
+		this.tweetplace=tweetpl;
+		try {
+			this.tweetretweetcount = Integer.parseInt(tweetrtc);
+			}
+			catch (NumberFormatException e)
+			{
+				this.tweetretweetcount =0;
+			}
+		try {
+			this.tweetreplytostatus=new BigInteger(tweetrtostat);
+			}
+			catch (NumberFormatException e)
+			{
+		
+		}
+		
+		
+		
+		this.tweetreplytousername=tweetrtousername;
+		
+		
+		//DATE
+		  try {
+			  final String TWITTER="EEE MMM dd HH:mm:ss ZZZZZ yyyy";
+			  SimpleDateFormat sf = new SimpleDateFormat(TWITTER,Locale.ENGLISH);
+			  sf.setLenient(true);
+			  Date tempdate =sf.parse(tweetdate);
+			this.date = new java.sql.Timestamp(tempdate.getTime() );
+		
+			  tempdate =sf.parse(userCreationDate);
+			this.userdate = new java.sql.Timestamp(tempdate.getTime() );
+			
+		//System.out.println(date.getTime());
+	        } catch (ParseException ex2) {
+	            ex2.printStackTrace();
+	 
+	        }
+		
+		try {
+		this.friendscount = Integer.parseInt(friendsc);
+		}
+		catch (NumberFormatException e)
+		{
+		this.friendscount =0;
+		}
+		try {
+			this.userstatscount = Integer.parseInt(Userstatusescount);
+			}
+			catch (NumberFormatException e)
+			{
+			this.userstatscount =0;
+			}
+		try {
+			this.listedcount = Integer.parseInt(listcount);
+			}
+			catch (NumberFormatException e)
+			{
+			this.listedcount =0;
+			}
+	
+		this.followers = followr;
+		String[] loc=geolocation.split(",");
+		this.longitude=Float.parseFloat(loc[1]);
+		
+		this.latitude=Float.parseFloat(loc[0]);
+		
+	
+		this.Content=cont;
+		this.containsurl=this.Content.contains("http");
+		//System.out.println(this.containsurl);
+		this.authordescription = userDesc.length()<5;
+		
+		this.Author=auth;
+	
+	}
+	
+	
+	
+	
+	public TweetModel (ResultSet r)
+	{
+		try{
+		this.keywords =r.getString("keywords");
+				this.date = r.getTimestamp("CreationDate");
+				this.latitude=r.getDouble("latitude");
+				this.longitude =r.getDouble("longitude");
+				this.Content=r.getString("tweetContent");
+				this.Author= r.getString("TweetUser");
+				this.screenname =r.getString("tweetScreenName");
+				this.followers=String.valueOf(r.getInt("userFollowers"));
+				this.friendscount = r.getInt("userfriendscount");
+				this.userstatscount= r.getInt("userStatusCount");
+				this.lang=r.getString("language");
+				this.id=BigInteger.valueOf(r.getLong("tweetID"));
+				this.tweetplace=r.getString("tweetplace");
+				this.tweetretweetcount=r.getInt("retweetcount");
+				this.tweetreplytostatus=BigInteger.valueOf(r.getLong("tweetreplytostatus"));
+				this.tweetreplytousername=r.getString("replytousername");
+				this.authordescription=r.getBoolean("userdescription");
+				
+				this.userdate=r.getTimestamp("userCreationdate");
+				
+				
+				this.listedcount=r.getInt("Userlistedcount");
+		}
+		
+				catch (Exception e)
+				{
+				e.printStackTrace();
+				}
+	
+	
+	}
+	
+	
+	
+}

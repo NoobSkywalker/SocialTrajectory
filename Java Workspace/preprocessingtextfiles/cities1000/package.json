@@ -1,0 +1,26 @@
+{
+  "name": "cities1000",
+  "version": "0.0.0",
+  "description": "lat/lon, names of cities with over 1000 people",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/cities1000.git"
+  },
+  "homepage": "https://github.com/substack/cities1000",
+  "keywords": [
+    "latitude",
+    "longitude",
+    "city",
+    "location",
+    "geo",
+    "latlon",
+    "position"
+  ],
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "license": "MIT"
+}

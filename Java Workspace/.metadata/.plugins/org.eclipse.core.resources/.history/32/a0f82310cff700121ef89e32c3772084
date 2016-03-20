@@ -1,0 +1,102 @@
+package Tweetmodelextractor;
+
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+ 
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+ 
+public class WriteXMLFile {
+ 
+	public static void writeXML(ArrayList<Model> tweets) {
+ 
+	  try {
+ 
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+ 
+		// root elements
+		Document doc = docBuilder.newDocument();
+		Element rootElement = doc.createElement("Models");
+		doc.appendChild(rootElement);
+		
+ 
+		
+		// firstname elements
+		
+		
+		for (Model m: tweets)
+		{
+	
+			Element tweetnode = doc.createElement("Tweet");
+			rootElement.appendChild(tweetnode);
+			
+			//Author
+			Element author = doc.createElement("Author");
+			author.appendChild(doc.createTextNode(m.Author));
+			tweetnode.appendChild(author);
+		
+			//Author
+			Element keywords = doc.createElement("Keywords");
+			String keyw="";
+			for (String s:m.keywords)
+			{
+				keyw+=","+s;
+			}
+			keywords.appendChild(doc.createTextNode(keyw));
+			tweetnode.appendChild(author);
+		// firstname elements
+		/*	Element titelnode = doc.createElement("Title");
+			titelnode.appendChild(doc.createTextNode(m.title));
+			modelnode.appendChild(titelnode);
+			
+		Element descriptionnode = doc.createElement("Description");
+		descriptionnode.appendChild(doc.createTextNode(m.description));
+		modelnode.appendChild(descriptionnode);
+		
+		// lastname elements
+		Element Previewpicnode = doc.createElement("Previewpic");
+		Previewpicnode.appendChild(doc.createTextNode(m.thumbnailfile));
+		modelnode.appendChild(Previewpicnode);
+		
+		// lastname elements
+		Element Previewurlnode = doc.createElement("Previewurl");
+		Previewurlnode.appendChild(doc.createTextNode(m.previewfile));
+		modelnode.appendChild(Previewurlnode);
+		 
+ */
+	
+		}
+ 
+		// write the content into xml file
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		DOMSource source = new DOMSource(doc);
+		StreamResult result = new StreamResult(new File("C:\\filenew.xml"));
+ 
+		// Output to console for testing
+		// StreamResult result = new StreamResult(System.out);
+ 
+		transformer.transform(source, result);
+ 
+		System.out.println("File saved!");
+ 
+	  } catch (ParserConfigurationException pce) {
+		pce.printStackTrace();
+	  } catch (TransformerException tfe) {
+		tfe.printStackTrace();
+	  }
+	}
+}

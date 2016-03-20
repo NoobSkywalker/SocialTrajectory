@@ -1,0 +1,302 @@
+package Tweetmodelextractor;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import twitter4j.*;
+import twitter4j.auth.AccessToken;
+import twitter4j.conf.ConfigurationBuilder;
+
+
+import com.csvreader.CsvReader;
+
+import  Tweetmodelextractor.WriteXMLFile;
+
+
+public class modelextractor {
+	
+	
+	static String[] event1 = {"Bolivia","President Morales","Morales","interview","offer","Snowden","humanitarian","asylum","#Morales","#Snowden","France","Portugal","Italy","refusing","refuse","permission","overfly","Attack","Life","Spain","demanding","search","plane","Snowden","Austrian","authorities","inspect","Bolivian","Morales","Vienna","no Snowden","blind passenger","vienna","Snowden on Plane","Bolivia","on Plane"
+} ;
+	
+	private static ConfigurationBuilder configBuilder;
+	private final static String CONSUMER_KEY = "LnGrwVvqBr0LxnHc5OsMRA";
+    private final static String CONSUMER_KEY_SECRET =     "hn4CDER2MErFY94ZvgVAWHpAriuJTnXvQyxR6gzXCJ8";
+	
+	static String[] event1files = {"F://tweetdata/2013_07_01_19.csv","F://tweetdata/2013_07_01_20.csv","F://tweetdata/2013_07_01_21.csv","F://tweetdata/2013_07_01_22.csv","F://tweetdata/2013_07_01_23.csv","F://tweetdata/2013_07_02_00.csv"
+		,"F://tweetdata/2013_07_02_01.csv","F://tweetdata/2013_07_02_02.csv","F://tweetdata/2013_07_02_03.csv","F://tweetdata/2013_07_02_04.csv","F://tweetdata/2013_07_02_05.csv","F://tweetdata/2013_07_02_06.csv","F://tweetdata/2013_07_02_07.csv","F://tweetdata/2013_07_02_08.csv","F://tweetdata/2013_07_02_09.csv"
+		,"F://tweetdata/2013_07_02_10.csv","F://tweetdata/2013_07_02_11.csv","F://tweetdata/2013_07_02_12.csv","F://tweetdata/2013_07_02_13.csv","F://tweetdata/2013_07_02_14.csv","F://tweetdata/2013_07_02_15.csv","F://tweetdata/2013_07_02_16.csv","F://tweetdata/2013_07_02_17.csv","F://tweetdata/2013_07_02_18.csv","F://tweetdata/2013_07_02_19.csv"
+		,"F://tweetdata/2013_07_02_20.csv","F://tweetdata/2013_07_02_21.csv","F://tweetdata/2013_07_02_22.csv","F://tweetdata/2013_07_02_23.csv","F://tweetdata/2013_07_02_00.csv"
+		,"F://tweetdata/2013_07_03_01.csv","F://tweetdata/2013_07_03_02.csv","F://tweetdata/2013_07_03_03.csv","F://tweetdata/2013_07_03_04.csv","F://tweetdata/2013_07_03_05.csv","F://tweetdata/2013_07_03_06.csv","F://tweetdata/2013_07_03_07.csv","F://tweetdata/2013_07_03_08.csv","F://tweetdata/2013_07_03_09.csv"
+		,"F://tweetdata/2013_07_03_10.csv","F://tweetdata/2013_07_03_11.csv","F://tweetdata/2013_07_03_12.csv","F://tweetdata/2013_07_03_13.csv","F://tweetdata/2013_07_03_14.csv","F://tweetdata/2013_07_03_15.csv","F://tweetdata/2013_07_03_16.csv","F://tweetdata/2013_07_03_17.csv","F://tweetdata/2013_07_03_18.csv","F://tweetdata/2013_07_03_19.csv"
+		,"F://tweetdata/2013_07_03_20.csv","F://tweetdata/2013_07_03_21.csv","F://tweetdata/2013_07_03_22.csv","F://tweetdata/2013_07_03_23.csv","F://tweetdata/2013_07_04_00.csv","F://tweetdata/2013_07_04_01.csv","F://tweetdata/2013_07_04_02.csv","F://tweetdata/2013_07_04_03.csv","F://tweetdata/2013_07_04_04.csv","F://tweetdata/2013_07_04_05.csv","F://tweetdata/2013_07_04_06.csv"
+		,"F://tweetdata/2013_07_04_07.csv"} ;
+	
+	static String[] event2files = {"F://tweetdata/snowden.csv"} ;
+	
+	static String[] event3files = {"F://tweetdata/2013_07_02_01.csv","F://tweetdata/2013_07_02_02.csv","F://tweetdata/2013_07_02_03.csv","F://tweetdata/2013_07_02_04.csv","F://tweetdata/2013_07_02_05.csv","F://tweetdata/2013_07_02_06.csv","F://tweetdata/2013_07_02_07.csv","F://tweetdata/2013_07_02_08.csv","F://tweetdata/2013_07_02_09.csv"
+		,"F://tweetdata/2013_07_02_10.csv","F://tweetdata/2013_07_02_11.csv","F://tweetdata/2013_07_02_12.csv","F://tweetdata/2013_07_02_13.csv","F://tweetdata/2013_07_02_14.csv","F://tweetdata/2013_07_02_15.csv","F://tweetdata/2013_07_02_16.csv","F://tweetdata/2013_07_02_17.csv","F://tweetdata/2013_07_02_18.csv","F://tweetdata/2013_07_02_19.csv"
+		,"F://tweetdata/2013_07_02_20.csv","F://tweetdata/2013_07_02_21.csv","F://tweetdata/2013_07_02_22.csv","F://tweetdata/2013_07_02_23.csv"} ;
+	static HashMap<String,Integer> ids= new HashMap<String,Integer>();
+	static CsvReader products;
+	static String tweetScreenName;
+	
+public static void main(String[] args) {
+		
+	//startReading(); 
+		checkTwitter();
+	}
+
+public static void checkTwitter()
+{
+	
+	configBuilder = new ConfigurationBuilder();
+    configBuilder.setDebugEnabled(true);        
+    configBuilder.setOAuthConsumerKey("LnGrwVvqBr0LxnHc5OsMRA");
+    configBuilder.setOAuthConsumerSecret("hn4CDER2MErFY94ZvgVAWHpAriuJTnXvQyxR6gzXCJ8");
+    configBuilder.setOAuthAccessToken("26801165-5i0EGcmO1uu64q8RQzVROfgM2VmIhJOVkIR5CI6JV");
+    configBuilder.setOAuthAccessTokenSecret("JxGX8D64myzHFM7K5YufwYucK6EEcc6kKbVranA0F4");
+    
+	
+	 try {
+        
+		 
+	
+         Twitter twitter = new TwitterFactory(configBuilder.build()).getInstance();
+    	 /*User user = twitter.showUser("Dan_Miller");
+    
+         System.out.println("Showing @" + user.getDescription() + "'s home timeline.");*/
+      
+         int idCount = 0;
+ 		ArrayList<Model> alltweets= new ArrayList<Model>();
+ 		for (int t=0; t<event2files.length; t++)
+ 		{
+ 		
+ 		try {
+ 		
+ 			products = new CsvReader(event2files[t],'\t');
+ 		
+ 			products.readHeaders();
+ 		for ( int i = 0; i<products.getHeaders().length;i++)
+ 			{
+ 			//System.out.println(products.getHeaders()[i]);
+ 			}
+ 			
+
+ 			
+ 		BufferedWriter writer = null;
+ 		try
+ 		{
+ 		    writer = new BufferedWriter( new FileWriter("F://users.txt"));
+ 		   
+ 		    		
+
+ 		}
+ 		catch ( IOException e)
+ 		{
+ 		}
+ 				while (products.readRecord())
+ 				{
+ 					String creationDate = products.get("TWEET_CREATIONDATE");
+ 					String tweetContent = products.get("TWEET_CONTENT");
+ 					tweetContent = tweetContent.replace("\\", "\\\\"); 
+ 					tweetContent = tweetContent.replace("'", " "); 
+ 					String tweetUser = products.get("USER_NAME");
+ 					tweetUser = tweetUser.replace("'", " "); 
+ 					tweetScreenName = products.get("USER_SCREENNAME");
+ 					String coordinates = products.get("TWEET_COORDS");
+ 					
+ 					String Userstatusescount = products.get("USER_STATUSESCOUNT");
+ 					String UserFollowers = products.get("USER_FOLLOWERSCOUNT");
+ 					String UserLocation = products.get("USER_LOCATION");
+ 					String UserFriendscount = products.get("USER_FRIENDSCOUNT");
+ 					String tweetID = products.get("TWEET_ID");
+ 					String language = products.get("USER_LANGUAGE");
+ 					
+ 					if( coordinates==null || coordinates.contains("null") || coordinates=="" || coordinates.split(",").length<2)
+ 					{
+ 				
+ 					continue;
+
+ 					}
+ 					if(!ids.containsKey(tweetID))
+ 					{
+ 						 User user = twitter.showUser(tweetScreenName.replace(" ", "_"));
+ 				UserModel tempmodel = new UserModel(user.getCreatedAt(),user.getDescription(),user.getLang(),user.getListedCount(),user.getProfileImageURL(),user.isVerified(),user.isProtected(),user.getName(),user.getURL(),user.getId());
+ 					
+ 				
+ 					try
+ 					{
+ 					    writer.append("INSERT INTO users (creationDate,description,language,userName,userURL,listedCount,isProtected,isVerified,profileImage,userID) VALUES  ("+"\'"+tempmodel.creationDate +"\'"+","+"\'"+tempmodel.Description+"\'"+","+"\'"+tempmodel.language+"\'"+","+"\'"+tempmodel.userName+"\'"+","+"\'"+tempmodel.userURL+"\'" +","+tempmodel.listedCount +","+tempmodel.isProtected +"," + tempmodel.isVerified  +","+"\'"+ tempmodel.profileimage+"\'"  + ","+ tempmodel.id +");\n");
+
+ 					}
+ 					catch ( IOException e)
+ 					{
+ 					}
+ 					}
+ 					ids.put(tweetID,0);
+ 					
+ 					
+ 					
+ 					
+ 					
+ 					
+ 					
+ 				
+ 				}
+ 				
+ 		
+ 			    try
+ 			    {
+ 			        if ( writer != null)
+ 			        writer.close( );
+ 			    }
+ 			    catch ( IOException e)
+ 			    {
+ 			    }
+ 			products.close();
+ 			
+ 		} catch (FileNotFoundException e) {
+ 			e.printStackTrace();
+ 		} catch (IOException e) {
+ 			e.printStackTrace();
+ 		}
+ 	
+ 	}
+ 		System.out.println(idCount);
+ 		WriteXMLFile.writeXML(alltweets);
+         
+         
+         
+         
+         
+         
+     } catch (TwitterException te) {
+         te.printStackTrace();
+         System.out.println("Failed to get timeline: " + te.getMessage());
+         System.out.println(tweetScreenName);
+         products.close();
+         //WriteXMLFile.writeXML(alltweets);
+         System.exit(-1);
+     }
+}
+	
+	
+	public static void startReading ()
+	{
+		int idCount = 0;
+		ArrayList<Model> alltweets= new ArrayList<Model>();
+		for (int t=0; t<event2files.length; t++)
+		{
+		
+		try {
+		
+			CsvReader products = new CsvReader(event2files[t],'\t');
+		
+			products.readHeaders();
+		for ( int i = 0; i<products.getHeaders().length;i++)
+			{
+			//System.out.println(products.getHeaders()[i]);
+			}
+			
+
+			
+		BufferedWriter writer = null;
+		try
+		{
+		    writer = new BufferedWriter( new FileWriter("F://tweets.txt"));
+		   
+		    		
+
+		}
+		catch ( IOException e)
+		{
+		}
+				while (products.readRecord())
+				{
+					String creationDate = products.get("TWEET_CREATIONDATE");
+					String tweetContent = products.get("TWEET_CONTENT");
+					tweetContent = tweetContent.replace("\\", "\\\\"); 
+					tweetContent = tweetContent.replace("'", " "); 
+					String tweetUser = products.get("USER_NAME");
+					tweetUser = tweetUser.replace("'", " "); 
+					String tweetScreenName = products.get("USER_SCREENNAME");
+					String coordinates = products.get("TWEET_COORDS");
+					
+					String Userstatusescount = products.get("USER_STATUSESCOUNT");
+					String UserFollowers = products.get("USER_FOLLOWERSCOUNT");
+					String UserLocation = products.get("USER_LOCATION");
+					String UserFriendscount = products.get("USER_FRIENDSCOUNT");
+					String tweetID = products.get("TWEET_ID");
+					String language = products.get("USER_LANGUAGE");
+					
+					if( coordinates==null || coordinates.contains("null") || coordinates=="" || coordinates.split(",").length<2)
+					{
+				
+					continue;
+
+					}
+					if(!ids.containsKey(tweetID))
+					{
+					Model tempmodel = new Model(tweetContent,creationDate,coordinates,tweetContent,tweetUser,tweetScreenName,UserFollowers,UserFriendscount,Userstatusescount,language,tweetID);
+					
+				
+					try
+					{
+					    writer.append("INSERT INTO tweets (creationDate,tweetContent,tweetUser,tweetScreenName,latitude,longitude,userStatusCount,userFollowers,userFriendscount,tweetID,language) VALUES  ("+"\'"+tempmodel.date +"\'"+","+"\'"+tempmodel.Content+"\'"+","+"\'"+tempmodel.Author+"\'"+","+"\'"+tempmodel.screenname+"\'"+","+tempmodel.latitude +","+tempmodel.longitude +","+ "\'"+tempmodel.userstatscount +"\'"+"," + tempmodel.followers +","+ tempmodel.friendscount + ","+ tempmodel.id + ","+"\'"+tempmodel.lang+ "\'"+");\n");
+
+					}
+					catch ( IOException e)
+					{
+					}
+					}
+					ids.put(tweetID,0);
+					
+					
+					
+					
+					
+					
+					
+				
+				}
+				
+		
+			    try
+			    {
+			        if ( writer != null)
+			        writer.close( );
+			    }
+			    catch ( IOException e)
+			    {
+			    }
+			products.close();
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	
+	}
+		System.out.println(idCount);
+		WriteXMLFile.writeXML(alltweets);
+		
+	}
+	
+
+	
+		   
+
+		 
+	
+
+
+
+}

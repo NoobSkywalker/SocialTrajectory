@@ -1,0 +1,18 @@
+package Tweetmodelextractor;
+
+public class City {
+
+	String name;
+	float lat;
+	float longi;
+	String population;
+	
+	
+	public  City(String n, String l, String longitude, String population)
+	{
+	this.name=n;
+	this.lat=Float.parseFloat(l);
+	this.longi=Float.parseFloat(longitude);
+	this.population=population;
+	}
+}

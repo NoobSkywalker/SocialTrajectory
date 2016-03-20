@@ -1,0 +1,133 @@
+package Tweetmodelextractor;
+
+import java.util.ArrayList;
+
+public class dbscan  
+{
+	
+	int minpoints; 
+	int eps;
+	ArrayList<TweetClusterModel> D;
+	ArrayList<Integer> assigned;
+	public ArrayList<Cluster> cluster;
+	
+	
+	
+	public dbscan ( int eps, int minpoints, ArrayList<TweetClusterModel> D)
+	{
+	this.eps=eps;
+	this.minpoints=minpoints;
+	this.D=D;
+	
+	
+	}
+	
+	
+	public  void run()
+	{
+
+		    this.assigned = new ArrayList<Integer>();
+		    //Put points in Assigned to know which one we visited. 
+		    for (int i=0; i<D.size();i++)
+		    {
+		    assigned.add(-1);
+		    }
+		    
+		    //C=0;
+		    this.cluster = new ArrayList<Cluster>();
+		 
+		    for (int P=0; P < D.size(); P++) {
+
+		        if (this.assigned.get(P) == 1) continue;  // already visited
+		       
+
+		        ArrayList<Integer> N = dbscanGetNeighbors(P);
+		        System.out.println("neighbors: " + N.size());
+		        if (N.size() + 1 < this.minpoints) 
+		        {
+		            this.assigned.set(P, -1); // noise
+		            System.out.println("Noise ");
+		        }
+		        else {
+		            int C = this.cluster.size(); // next cluster index
+		            this.cluster.add(new Cluster());  // new cluster
+		            System.out.println("cluster " + C);
+		            expandCluster(P, N, C);
+		        }
+		    }
+		
+		
+		
+	}
+	
+	
+public ArrayList<Integer> dbscanGetNeighbors(int P) {
+	ArrayList<Integer> neighbors = new ArrayList<Integer>();
+	    
+	    for (int i=0; i<D.size();i++) {
+	        
+	        if (i == P) continue;
+	  
+	     
+	        if (distanceinKM(this.D.get(P), this.D.get(i)) <= this.eps)
+	            neighbors.add(i);
+	    }
+	    return neighbors;
+	}
+	
+	
+	
+	public void  expandCluster(int P, ArrayList<Integer> N, int C) 
+	{
+	    this.cluster.get(C).Tweets.add(D.get(P));
+	    this.assigned.set(P,C);
+	    
+	    for (int PP = 0; PP < N.size(); PP++) {  // PP is P' -- note P' is indexing N, not D
+	        //console.log('> ' + N[PP]);
+	        if (this.assigned.get(N.get(PP)) == 0) {  // P' not yet visited?
+	           // console.log('> visiting');
+				// this.assigned[N[PP]]=-1;
+	            ArrayList<Integer> NP = this.dbscanGetNeighbors(N.get(PP));  // NP is N'
+	           // console.log('> neighbors: ' + NP);
+	            if (NP.size() >= this.minpoints) {
+	                //N = N.concat(NP.filter(function(p) { return p != P && N.indexOf(p) == -1 } ));
+	               // console.log('expanded neighborhood: ' + N);
+	            }
+	        }
+	        if (!(this.assigned.get(PP) > -1)) {  // P' not yet assigned to a cluster?
+	            
+	            this.assigned.set(PP,C);
+				this.cluster.get(C).Tweets.add(D.get(PP));
+	        }
+		
+	    }
+	}
+	
+	public double distanceinKM(TweetClusterModel tweet1, TweetClusterModel tweet2)
+	{
+		
+			double tm1lat = toRad(tweet1.latitude);
+			double tm1long = toRad(tweet1.longitude);
+			double tm2lat = toRad(tweet2.latitude);
+			double tm2long = toRad(tweet2.longitude);
+			double radiusOfEarth = 6371000;// Earth's radius in meters.
+			double diffLatitude =  tm2lat -tm1lat;
+			double diffLongitude = tm2long -  tm1long;
+			double a = Math.sin(diffLatitude / 2) * Math.sin(diffLatitude / 2) +
+	         Math.cos(tm1lat) * Math.cos(tm2lat) *  Math.sin(diffLongitude / 2) * Math.sin(diffLongitude / 2);
+			double dc = 2 * Math.asin(Math.sqrt(a));
+			double distance = radiusOfEarth * dc;
+	     return distance/1000;
+		
+	}
+
+		public double toRad(double tor) {
+	   return tor * Math.PI / 180;
+	}
+	
+	
+	
+	
+}
+
+

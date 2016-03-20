@@ -1,0 +1,18 @@
+package Tweetmodelextractor;
+
+import java.util.ArrayList;
+
+public class Cluster {
+
+	ArrayList<TweetClusterModel> Tweets;
+	float lati;
+	float longi;
+	int size;
+	
+	public Cluster()
+	{
+		this.Tweets=new ArrayList<TweetClusterModel>();
+	}
+	
+	
+}

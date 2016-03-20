@@ -1,0 +1,1 @@
+Griffon 1.2.0: An application framework for developing desktop applications in the JVM   

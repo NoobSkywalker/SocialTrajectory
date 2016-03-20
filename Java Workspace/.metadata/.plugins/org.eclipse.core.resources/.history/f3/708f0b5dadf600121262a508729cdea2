@@ -1,0 +1,103 @@
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import com.csvreader.CsvReader;
+
+
+public class modelextractor {
+	
+	
+	
+public static void main(String[] args) {
+		
+		
+		//createDuckTables();
+		//loadbw_poiDataIntoTables();
+		//loadbw_highwayDataIntoTables();
+		//loadbw_locationDataIntoTables();
+		//loadDuckDataIntoTables();
+	}
+	
+	
+	public static void loadDuckDataIntoTables ()
+	{
+		try {
+			
+			CsvReader products = new CsvReader("data/MPIO Lake Constance Ducks Argos.csv");
+		
+			products.readHeaders();
+			/*for ( int i = 0; i<products.getHeaders().length;i++)
+			{
+			System.out.println(products.getHeaders()[i]);
+			}*/
+			
+			Connection conn = null;
+			try{
+				Class.forName("org.postgresql.Driver"); //create postgresql driver
+				String url = "jdbc:postgresql://localhost:5432/gisproject"; //connection string using localhost and postgis database
+				conn = DriverManager.getConnection(url,"postgres","lachen"); //connect to database with username=postgres and //password=123456
+				((PGConnection)conn).addDataType("geometry", org.postgis.PGgeometry.class); //add support for Geometrytypes
+				Statement s = conn.createStatement(); //create query statement
+				int idCount = 0;
+				while (products.readRecord())
+				{
+					String timestamp = products.get("timestamp");
+					timestamp = timestamp.replace(':', '-');
+					timestamp = timestamp.replace(' ', '-');
+					String location_long = products.get("location-long");
+					String location_lat = products.get("location-lat");
+					String temperature = products.get("raster:pgb-derived/Temperature_celsius/850");
+					String windspeed = products.get("raster:pgb-derived/Wind_speed/850");
+					String winddirection = products.get("raster:pgb-derived/Wind_direction_degrees/850");
+					String distancefromland = products.get("raster:gmt-d2c/distance_from_land/");
+					String inclination = products.get("raster:geomag/inclination/");
+					String declination = products.get("raster:geomag/declination/");
+					
+			
+					
+					if( location_long != "")
+					{
+					// perform program logic here
+					System.out.println(timestamp + " | " + location_long + " | " + location_lat + " | " + temperature + " | " + windspeed + " | " + winddirection + " | " + distancefromland + " | " +inclination + " | " +declination);
+					s.execute("insert into \"duckdata\" (\"id\",\"timestamp\",\"temperature\",\"windspeed\",\"winddirection\",\"distancefromland\",\"inclination\",\"declination\",position) values ("+idCount+","+timestamp+","+temperature+","+windspeed+","+winddirection+","+distancefromland+","+inclination+","+declination+","+"ST_GeomFromText(\'POINT("+location_long+" "+location_lat+")\',-1))");
+					idCount++;
+					}
+				}
+				
+				s.close(); //close statement when finished
+				}catch(Exception ex) {
+				System.err.println(ex);
+				ex.printStackTrace();
+				} finally {
+				if (conn != null)
+				try{
+				conn.close(); //close connection when finished
+				}catch(Exception ex) {}
+				}
+			
+	
+			products.close();
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	
+		   
+
+		 
+	
+
+
+
+}

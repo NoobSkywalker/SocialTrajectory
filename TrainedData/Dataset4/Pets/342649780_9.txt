@@ -1,0 +1,1 @@
+@gupsegunes findings: much better now, but 'bird' and 'dog' return value without using space,while 'cat' shortlists results when I hit space 

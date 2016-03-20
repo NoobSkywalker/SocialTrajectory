@@ -1,0 +1,52 @@
+package Tweetmodelextractor;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class UserModel {
+	
+	
+	public Date creationDate;
+	public String Description;
+	public String language;
+	public int listedCount;
+	public String profileimage;
+	public Boolean isVerified;
+	public boolean isProtected;
+	public String userName;
+	public String userURL;
+	
+	public UserModel(String creationDate, String description, String language,
+			int listedCount, String profileimage, Boolean isVerified,
+			boolean isProtected, String userName, String userURL) {
+		super();
+		
+		 try {
+			  final String TWITTER="EEE MMM dd HH:mm:ss ZZZZZ yyyy";
+			  SimpleDateFormat sf = new SimpleDateFormat(TWITTER,Locale.ENGLISH);
+			  sf.setLenient(true);
+			  Date tempdate =sf.parse(creationDate);
+			this.creationDate = new java.sql.Timestamp(tempdate.getTime() );
+			
+		
+	       } catch (ParseException ex2) {
+	           ex2.printStackTrace();
+
+	       }
+		
+	
+		Description = description;
+		this.language = language;
+		this.listedCount = listedCount;
+		this.profileimage = profileimage;
+		this.isVerified = isVerified;
+		this.isProtected = isProtected;
+		this.userName = userName;
+		this.userURL = userURL;
+	}
+	
+	
+	
+}

@@ -1,0 +1,896 @@
+package Tweetmodelextractor;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import org.postgis.PGgeometry;
+import org.postgresql.core.BaseConnection;
+import org.postgresql.PGConnection;
+
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import java.util.Map;
+
+
+import twitter4j.*;
+import twitter4j.auth.AccessToken;
+import twitter4j.conf.ConfigurationBuilder;
+
+
+
+import com.csvreader.CsvReader;
+
+
+
+public class modelextractor {
+
+
+
+
+	private static ConfigurationBuilder configBuilder;
+	private final static String CONSUMER_KEY = "LnGrwVvqBr0LxnHc5OsMRA";
+	private final static String CONSUMER_KEY_SECRET =     "hn4CDER2MErFY94ZvgVAWHpAriuJTnXvQyxR6gzXCJ8";
+
+
+
+	static String[] event2files = {"F:/tweetdata/thesis/2014_02_02_11.csv","F:/tweetdata/thesis/2014_02_02_13.csv","F:/tweetdata/thesis/2014_02_02_14.csv","F:/tweetdata/thesis/2014_02_02_15.csv","F:/tweetdata/thesis/2014_02_02_16.csv","F:/tweetdata/thesis/2014_02_02_17.csv","F:/tweetdata/thesis/2014_02_02_18.csv","F:/tweetdata/thesis/2014_02_02_19.csv","F:/tweetdata/thesis/2014_02_02_20.csv","F:/tweetdata/thesis/2014_02_02_21.csv","F:/tweetdata/thesis/2014_02_02_22.csv","F:/tweetdata/thesis/2014_02_02_23.csv"} ;
+
+
+	static HashMap<String,Integer> ids= new HashMap<String,Integer>();
+	static Map<String,Integer> keywordscount= new HashMap<String,Integer>();
+	static CsvReader products;
+	static String tweetScreenName;
+	static ArrayList<City> allcities;
+	static HashMap<String,String> stopwordshm = new HashMap<String,String>();
+	static int cids=0;
+	
+	public static void main(String[] args) {
+	
+	
+		//createWordTable();
+		//countwords();
+		//createHashtagTable();
+		//counthashtags();
+		
+		//createClusterTables();
+		
+		/*try{
+			 Statement s = getDBConnection().createStatement();
+			  String gethashtags = "SELECT * FROM hashtags";
+	        ResultSet f = s.executeQuery(gethashtags);
+	      
+int size=0;
+	        while(f.next())
+	        {
+	        	//calculateClusters(f.getString("hashtag"));
+	        	size++;
+	        
+	        }
+	        System.out.println(size);
+		}
+		
+		catch (Exception e)
+		{
+			
+		}*/
+		generateCategories();
+		//calculateClusters("#camto1mill");
+
+		//startReading(); 
+
+	}
+	
+	
+    public static void createTweetTables() {
+        Connection conn = null;
+        try {
+            Class.forName("org.postgresql.Driver"); //create postgresql driver
+            String url = "jdbc:postgresql://localhost:5432/thesis"; //connection string using localhost and postgis database
+            conn = DriverManager.getConnection(url, "postgres", "lachen"); //connect to database with username=postgres and //password=123456
+            ((PGConnection) conn).addDataType("geometry", org.postgis.PGgeometry.class); //add support for Geometrytypes
+            Statement s = conn.createStatement(); //create query statement
+            
+            
+            //execution table queries
+           // s.execute("drop table IF EXISTS tweetdata");
+           // s.execute("create table tweetdata (\"creationDate\" timestamp NULL DEFAULT NULL ,\"tweetContent\" varchar(256) DEFAULT NULL, \"tweetUser\" varchar(256), \"tweetScreenName\" varchar(120), \"latitude\" float8 DEFAULT NULL, \"longitude\" float8 DEFAULT NULL, \"userStatusCount\" int DEFAULT NULL, \"userFollowers\" int DEFAULT NULL, \"userLocation\" varchar(256), \"userFriendscount\" int DEFAULT NULL,\"tweetid\" bigint primary key NOT NULL,\"language\" varchar(256) DEFAULT NULL,\"place\" varchar(256) DEFAULT NULL,\"retweetcount\" int DEFAULT NULL,\"replytostatus\" bigint DEFAULT NULL,\"replytousername\" varchar(256) DEFAULT NULL,\"containsUrl\" boolean DEFAULT NULL,\"authordescription\" boolean DEFAULT NULL,\"userlistedcount\" int DEFAULT NULL,\"userCreationdate\" timestamp NULL DEFAULT CURRENT_TIMESTAMP, \"keywords\" varchar(256) DEFAULT NULL,\"datasetid\" int DEFAULT NULL,\"sentiment\" int DEFAULT NULL,\"ccitylat\" float8 DEFAULT NULL,\"ccitylong\" float8 DEFAULT NULL,\"ccityname\" varchar(256) DEFAULT NULL);");
+            //s.execute("SELECT AddGeometryColumn(\'public\',\'tweetdata\',\'polygeo\',\'-1\',\'POINT\',2);");
+            
+            //processallTweetsfromcsv
+            
+            processTweets(s);
+            
+            
+            s.close(); //close statement when finished
+        } catch (Exception ex) {
+            System.err.println(ex);
+            ex.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close(); //close connection when finished
+                } catch (Exception ex) {
+                }
+            }
+        }
+    }
+    
+    
+    public static void createClusterTables() {
+        Connection conn = null;
+        try {
+            Class.forName("org.postgresql.Driver"); //create postgresql driver
+            String url = "jdbc:postgresql://localhost:5432/thesis"; //connection string using localhost and postgis database
+            conn = DriverManager.getConnection(url, "postgres", "lachen"); //connect to database with username=postgres and //password=123456
+            ((PGConnection) conn).addDataType("geometry", org.postgis.PGgeometry.class); //add support for Geometrytypes
+            Statement s = conn.createStatement(); //create query statement
+            
+            
+            //execution table queries
+           s.execute("drop table IF EXISTS clusters");
+            s.execute("create table clusters (\"clusterid\" bigint primary key NOT NULL ,\"size\" int DEFAULT NULL, \"centroidlat\" float8 DEFAULT NULL, \"centroidlong\" float8 DEFAULT NULL, \"hashtagid\" bigint, \"avgtime\" timestamp);");
+   
+            s.execute("drop table IF EXISTS clustertweets");
+            s.execute("create table clustertweets (\"clusterid\" bigint NOT NULL ,\"tweetid\" bigint NOT NULL );");
+            
+            //processallTweetsfromcsv
+            
+            //processTweets(s);
+            
+            
+            s.close(); //close statement when finished
+        } catch (Exception ex) {
+            System.err.println(ex);
+            ex.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close(); //close connection when finished
+                } catch (Exception ex) {
+                }
+            }
+        }
+    }
+    
+    
+    public static void generateCategories()
+    {
+    
+    	TopicClassification classifier = new TopicClassification();
+		try{
+		classifier.trainclassifier();
+		}
+		
+		catch (Exception e)
+		{
+		
+		}
+		
+		
+    	String statem="";
+    	String clusterquery="";
+    	
+    	try{
+    		
+        Statement s = getDBConnection().createStatement();
+    	String query = "SELECT * FROM tweetdata LIMIT 50 OFFSET 0";
+    	
+    	ResultSet r = s.executeQuery(query);
+    	
+    	
+    	
+    	
+    	ArrayList<TweetClusterModel> resultTweets = new ArrayList<TweetClusterModel>();
+    	
+    	while (r.next()) { //iterate while there are tweets to retrieve.
+           
+    		String[] keywordsplit = r.getString("TweetContent").split(" ");
+    		TweetModel tweet = new TweetModel(r);
+    				System.out.println(tweet.Content);
+    				
+    		String cat = classifier.getCategory(tweet);
+    		System.out.println(r.getLong("tweetid"));
+    	 TweetClusterModel temptweet = new TweetClusterModel (r.getLong("tweetid"),r.getFloat("ccitylat"),r.getFloat("ccitylong"),r.getTimestamp("creationDate"));
+    	 resultTweets.add(temptweet);
+            
+    	 String updatestatement = "UPDATE tweetdata set category =\""+cat + "\" WHERE tweetid= " +temptweet.id;
+    	  s.executeUpdate(updatestatement);
+        }
+    	}
+    	
+
+    
+    
+    	catch (Exception ex)
+    	{
+    		System.out.println(clusterquery);
+    		 ex.printStackTrace();
+    	}
+    	
+    }
+    
+    
+    public static void calculateClusters(String hashtag)
+    {
+    
+    	
+    	String statem="";
+    	String clusterquery="";
+    	
+    	try{
+    		
+        Statement s = getDBConnection().createStatement();
+    		
+    		
+      
+        
+    	String query = "SELECT * FROM tweetdata  WHERE LOWER(\"tweetContent\") LIKE '%"+hashtag+"%' AND \"datasetid\"=3 ORDER BY \"creationDate\"";
+    	
+    	ResultSet r = s.executeQuery(query);
+    	
+    	
+    	
+    	
+    	ArrayList<TweetClusterModel> resultTweets = new ArrayList<TweetClusterModel>();
+    	
+    	while (r.next()) { //iterate while there are tweets to retrieve.
+           
+    		String[] keywordsplit = r.getString("TweetContent").split(" ");
+    		System.out.println(r.getLong("tweetid"));
+    	 TweetClusterModel temptweet = new TweetClusterModel (r.getLong("tweetid"),r.getFloat("ccitylat"),r.getFloat("ccitylong"),r.getTimestamp("creationDate"));
+    	 resultTweets.add(temptweet);
+            
+            
+        }
+    	
+    	String gethashtagidquery = "SELECT * FROM hashtags WHERE LOWER(\"hashtag\") LIKE '"+hashtag+"'";
+        
+    	r = s.executeQuery(gethashtagidquery);
+    	long hashid= 0;
+    	while(r.next()){
+    		hashid = r.getLong("hashID");
+    	
+    	}
+    	
+    	dbscan DBSCAN= new dbscan(50,50,60,resultTweets);
+    	DBSCAN.run();
+    	
+    	System.out.println("Clusters found:"+ DBSCAN.cluster.size());
+    	System.out.println("Cluster 0 size "+DBSCAN.cluster.get(0).Tweets.size());
+    	
+    	
+    
+    	for( Cluster c : DBSCAN.cluster)
+    	{
+    	    c.calculateCentroid();
+    	    c.calculateAverageTime();
+    	    System.out.println("idS,size,lat,long:" + cids +"," +c.size + ","+ c.lati+ ","+c.longi);
+    		clusterquery = "INSERT INTO \"clusters\" (\"clusterid\",\"size\",\"centroidlat\",\"centroidlong\",\"hashtagid\",\"avgtime\") VALUES  ("+"\'"+cids +"\'"+","+"\'"+c.size+"\'"+","+"\'"+c.lati+"\'"+","+"\'"+c.longi+"\'"+","+"\'"+hashid+"\'"+","+"\'"+c.avgTime+"\'"+");\n";	
+    		s.executeUpdate(clusterquery);
+    		
+    	for( TweetClusterModel t :c.Tweets)
+    	{
+    		String clustertweetsquery = "INSERT INTO \"clustertweets\" (\"clusterid\",\"tweetid\") VALUES  ("+"\'"+cids +"\'"+","+"\'"+t.id+"\'"+");\n";	
+    		s.executeUpdate(clustertweetsquery);
+    		
+    	}
+    	
+    	cids=cids+1;
+    	}
+    	
+    	}
+    	catch (Exception ex)
+    	{
+    		System.out.println(clusterquery);
+    		 ex.printStackTrace();
+    	}
+    	
+    }
+    
+    
+    public static Connection getDBConnection() {
+        Connection conn = null;
+        try {
+            Class.forName("org.postgresql.Driver"); //create postgresql driver
+            String url = "jdbc:postgresql://localhost:5432/thesis"; //connection string using localhost and postgis database
+            conn = DriverManager.getConnection(url, "postgres", "lachen"); //connect to database with username=postgres and //password=123456
+            ((PGConnection) conn).addDataType("geometry", org.postgis.PGgeometry.class); //add support for Geometrytypes
+       
+            
+            
+            //execution table queries
+           // s.execute("drop table IF EXISTS tweetdata");
+           // s.execute("create table tweetdata (\"creationDate\" timestamp NULL DEFAULT NULL ,\"tweetContent\" varchar(256) DEFAULT NULL, \"tweetUser\" varchar(256), \"tweetScreenName\" varchar(120), \"latitude\" float8 DEFAULT NULL, \"longitude\" float8 DEFAULT NULL, \"userStatusCount\" int DEFAULT NULL, \"userFollowers\" int DEFAULT NULL, \"userLocation\" varchar(256), \"userFriendscount\" int DEFAULT NULL,\"tweetid\" bigint primary key NOT NULL,\"language\" varchar(256) DEFAULT NULL,\"place\" varchar(256) DEFAULT NULL,\"retweetcount\" int DEFAULT NULL,\"replytostatus\" bigint DEFAULT NULL,\"replytousername\" varchar(256) DEFAULT NULL,\"containsUrl\" boolean DEFAULT NULL,\"authordescription\" boolean DEFAULT NULL,\"userlistedcount\" int DEFAULT NULL,\"userCreationdate\" timestamp NULL DEFAULT CURRENT_TIMESTAMP, \"keywords\" varchar(256) DEFAULT NULL,\"datasetid\" int DEFAULT NULL,\"sentiment\" int DEFAULT NULL,\"ccitylat\" float8 DEFAULT NULL,\"ccitylong\" float8 DEFAULT NULL,\"ccityname\" varchar(256) DEFAULT NULL);");
+            //s.execute("SELECT AddGeometryColumn(\'public\',\'tweetdata\',\'polygeo\',\'-1\',\'POINT\',2);");
+            
+            
+            
+            
+            
+        } catch (Exception ex) {
+            System.err.println(ex);
+            ex.printStackTrace();
+        } 
+        return conn;
+    }
+	
+    public static void createdatasetTable()
+    {
+    	 Connection conn = null;
+         try {
+             Class.forName("org.postgresql.Driver"); //create postgresql driver
+             String url = "jdbc:postgresql://localhost:5432/thesis"; //connection string using localhost and postgis database
+             conn = DriverManager.getConnection(url, "postgres", "lachen"); //connect to database with username=postgres and //password=123456
+             ((PGConnection) conn).addDataType("geometry", org.postgis.PGgeometry.class); //add support for Geometrytypes
+             Statement s = conn.createStatement(); //create query statement
+             
+             
+             //execution table queries
+            s.execute("drop table IF EXISTS dataset");
+             s.execute("create table dataset (\"datasetid\" bigint primary key NOT NULL ,\"name\" varchar(256) DEFAULT NULL, \"description\" varchar(1000), \"keywords\" varchar(120), \"timespan\" varchar(120) DEFAULT NULL)");
+             //s.execute("SELECT AddGeometryColumn(\'public\',\'tweetdata\',\'polygeo\',\'-1\',\'POINT\',2);");
+             
+             //processallTweetsfromcsv
+             
+            // processTweets(s);
+             
+             
+             s.close(); //close statement when finished
+         } catch (Exception ex) {
+             System.err.println(ex);
+             ex.printStackTrace();
+         } finally {
+             if (conn != null) {
+                 try {
+                     conn.close(); //close connection when finished
+                 } catch (Exception ex) {
+                 }
+             }
+         }
+    }
+    
+    
+    public static void createHashtagTable()
+    {
+    	 Connection conn = null;
+         try {
+             Class.forName("org.postgresql.Driver"); //create postgresql driver
+             String url = "jdbc:postgresql://localhost:5432/thesis"; //connection string using localhost and postgis database
+             conn = DriverManager.getConnection(url, "postgres", "lachen"); //connect to database with username=postgres and //password=123456
+             ((PGConnection) conn).addDataType("geometry", org.postgis.PGgeometry.class); //add support for Geometrytypes
+             Statement s = conn.createStatement(); //create query statement
+             
+             
+             //Drop and create the hashtags table
+            s.execute("drop table IF EXISTS hashtags");
+            s.execute("create table hashtags (\"hashid\" bigint primary key NOT NULL ,\"hashtag\" varchar(256) DEFAULT NULL, \"frequency\" int, \"relatedkeywords\" varchar(500),datasetid bigint)");
+        
+            s.close();
+            
+         } catch (Exception ex) {
+             System.err.println(ex);
+             ex.printStackTrace();
+         } finally {
+             if (conn != null) {
+                 try {
+                     conn.close(); //close connection when finished
+                 } catch (Exception ex) {
+                 }
+             }
+         }
+    }
+    
+    public static void createWordTable()
+    {
+    	 Connection conn = null;
+         try {
+             Class.forName("org.postgresql.Driver"); //create postgresql driver
+             String url = "jdbc:postgresql://localhost:5432/thesis"; //connection string using localhost and postgis database
+             conn = DriverManager.getConnection(url, "postgres", "lachen"); //connect to database with username=postgres and //password=123456
+             ((PGConnection) conn).addDataType("geometry", org.postgis.PGgeometry.class); //add support for Geometrytypes
+             Statement s = conn.createStatement(); //create query statement
+             
+             
+             //Drop and create the hashtags table
+            s.execute("drop table IF EXISTS words");
+            s.execute("create table words (\"wordid\" bigint primary key NOT NULL ,\"word\" varchar(256) DEFAULT NULL, \"frequency\" int, \"relatedkeywords\" varchar(500), datasetid bigint)");
+        
+            s.close();
+            
+         } catch (Exception ex) {
+             System.err.println(ex);
+             ex.printStackTrace();
+         } finally {
+             if (conn != null) {
+                 try {
+                     conn.close(); //close connection when finished
+                 } catch (Exception ex) {
+                 }
+             }
+         }
+    }
+    
+    
+    public static void countwords()
+    {
+    	String statem="";
+    	try{
+    	String query = "SELECT * FROM tweetdata";
+    	Statement s = getDBConnection().createStatement();
+    	ResultSet r = s.executeQuery(query);
+    	
+    	while (r.next()) { //iterate while there are polygons to retrieve
+           
+    		String[] keywordsplit = r.getString("TweetContent").split(" ");
+    		
+    	 
+            
+            for ( int i=0; i< keywordsplit.length; i++)
+			{
+            	
+            	String normalized="";
+				if(keywordsplit[i].length()<4 )
+				{
+				continue;
+				}
+				
+				normalized = keywordsplit[i].toLowerCase();
+				
+				if(keywordscount.containsKey(normalized))
+				{
+					keywordscount.put(normalized,keywordscount.get(normalized)+1);
+					//System.out.println(keywordsplit[i]);
+				}
+				else
+				{
+					keywordscount.put(normalized, 0);
+				}
+
+			}
+            
+            
+        }
+    	
+    	keywordscount = MapUtil.sortByValue( keywordscount );
+		int counter = 0;
+		
+		for(Map.Entry<String, Integer> e : keywordscount.entrySet()){
+
+			System.out.println(e.getKey() + " = " + e.getValue());
+			//TODO
+		//	statem = "INSERT INTO \"words\" (\"wordid\",\"word\",\"frequency\") VALUES ("+counter+","+"\'"+e.getKey()+"\',"+e.getValue()+");";
+			//s.execute(statem);
+			counter++;
+			if(counter==500)
+				break;
+
+		}
+
+    	
+    	}
+    	catch (Exception ex)
+    	{
+    		System.out.println(statem);
+    		 ex.printStackTrace();
+    	}
+    }
+    
+    public static void counthashtags()
+    {
+    	String statem="";
+    	try{
+    	String query = "SELECT * FROM tweetdata";
+    	Statement s = getDBConnection().createStatement();
+    	ResultSet r = s.executeQuery(query);
+    	Map<String,Integer> keywordsinthisTweet;
+    	
+    	while (r.next()) { //iterate while there are polygons to retrieve
+           
+    		String[] keywordsplit = r.getString("TweetContent").split(" ");
+    		
+    		keywordsinthisTweet= new HashMap<String,Integer>();
+            
+            for ( int i=0; i< keywordsplit.length; i++)
+			{
+            	
+            	
+            	
+            	String normalized="";
+            	
+            	
+            	
+				if(keywordsplit[i].length()<4 )
+				{
+				continue;
+				}
+				if(!keywordsplit[i].contains("#"))
+				{
+					
+				continue;
+				}
+				normalized = keywordsplit[i].toLowerCase();
+				
+				if(keywordsinthisTweet.containsKey(normalized))
+				{
+				continue;
+				}
+				
+				if(keywordscount.containsKey(normalized))
+				{
+					keywordscount.put(normalized,keywordscount.get(normalized)+1);
+					//System.out.println(keywordsplit[i]);
+				}
+				else
+				{
+					keywordscount.put(normalized, 0);
+				}
+				keywordsinthisTweet.put(normalized,0);
+
+			}
+            
+            
+        }
+    	
+    	keywordscount = MapUtil.sortByValue( keywordscount );
+		int counter = 0;
+		
+		for(Map.Entry<String, Integer> e : keywordscount.entrySet()){
+
+			System.out.println(e.getKey() + " = " + e.getValue());
+			//TODO
+			statem = "INSERT INTO \"hashtags\" (\"hashid\",\"hashtag\",\"frequency\") VALUES ("+counter+","+"\'"+e.getKey()+"\',"+e.getValue()+");";
+			s.execute(statem);
+			counter++;
+			if(counter==500)
+				break;
+
+		}
+
+    	
+    	}
+    	catch (Exception ex)
+    	{
+    		System.out.println(statem);
+    		 ex.printStackTrace();
+    	}
+    }
+    
+	
+
+
+	
+
+
+	public static void processTweets (Statement st)
+	{
+		int idCount = 0;
+		int failureCount = 0;
+		ArrayList<TweetModel> alltweets= new ArrayList<TweetModel>();
+		SentimentClassifier sentClassifier; 		
+		sentClassifier = new SentimentClassifier(); 
+
+
+
+		for (int t=0; t<event2files.length; t++)
+		{
+
+			try {
+
+				CsvReader products = new CsvReader(event2files[t],'\t');
+				CsvReader cities = new CsvReader("C://Users/Lehle/Desktop/twitterprojekt/Credibility Tool/cities1000.txt", '\t');
+
+				products.readHeaders();
+
+
+				for ( int i = 0; i<products.getHeaders().length;i++)
+				{
+					//System.out.println(products.getHeaders()[i]);
+				}
+
+				try
+				{
+					BufferedReader textIn = new BufferedReader(new FileReader("F://stopwords.txt"));
+					String curLine = null;
+
+
+					while ((curLine = textIn.readLine()) != null) {
+						curLine = curLine.trim();
+						stopwordshm.put(curLine, curLine);
+
+					}
+
+				}
+				catch (Exception e)
+				{
+
+				}
+
+				BufferedWriter writer = null;
+				try
+				{
+					writer = new BufferedWriter( new FileWriter("F://thesis.sql"));
+
+
+
+				}
+				catch ( IOException e)
+				{
+
+				}
+				allcities = new ArrayList<City>();
+				while (cities.readRecord())
+				{
+					allcities.add(new City(cities.get(1),cities.get(4),cities.get(5),cities.get(14)));
+				}
+				//System.out.println(allcities.size());
+
+				boolean skipword=false;
+				
+				while (products.readRecord())
+				{
+					//Tweetdetails
+					String creationDate = products.get("TWEET_CREATIONDATE");
+					String tweetContent = products.get("TWEET_CONTENT");
+					String tweetreplytostatus = products.get("TWEET_REPLYTOSTATUS");
+					String tweetreplytousername = products.get("TWEET_REPLYTOUSERNAME");
+					String tweetreplytouserid = products.get("TWEET_REPLYTOUSERid");
+					String tweetplace = products.get("TWEET_PLACE");
+					String tweetfavourited = products.get("TWEET_FAVORITED");
+					String tweetretweetcount = products.get("TWEET_RETWEETCOUNT");
+					tweetplace = tweetplace.replace("'", " "); 
+					int sentiment = 1;
+					String sent = sentClassifier.classify(tweetContent); 
+					/*if( tweetContent.contains("marathon")==false)
+					{
+
+					continue;
+
+					}*/
+
+					if( sent.contains("pos"))
+					{
+						sentiment = 1;
+					}
+					if( sent.contains("neg"))
+					{
+						sentiment = -1;
+						//System.out.println(tweetContent);
+					}
+					if( sent.contains("neu"))
+					{
+						sentiment = 0;
+					}
+					//System.out.println("Sentiment: " + sentiment);
+					tweetContent = tweetContent.replace("\\", "\\\\"); 
+					tweetContent = tweetContent.replace("'", ""); 
+					String tweetUser = products.get("USER_NAME");
+					tweetUser = tweetUser.replace("'", " "); 
+					tweetScreenName = products.get("USER_SCREENNAME");
+					String coordinates = products.get("TWEET_COORDS");
+					String language = products.get("USER_LANGUAGE");
+
+					// if no geotagg or not english skip it... 
+					if( coordinates==null || coordinates.contains("null") || coordinates=="" || coordinates.split(",").length<2 || !language.contains("en") )
+					{
+
+						continue;
+
+					}
+
+					String keywordtemp= tweetContent;
+					keywordtemp= keywordtemp.replaceAll("[-+^#!?,.()@ÂÃâÅï]*", "");
+					keywordtemp= keywordtemp.replaceAll("[^\\p{L}\\p{Nd}]"," ");
+					String[] keywordsplit = keywordtemp.split(" ");
+					String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGLMNOPQRSTUVWXYZéèáàß";
+
+					for ( int i=0; i< keywordsplit.length; i++)
+					{
+						if(stopwordshm.containsKey(keywordsplit[i]))
+						{
+							keywordtemp= keywordtemp.replaceAll(keywordsplit[i],"");
+							//System.out.println(keywordsplit[i]);
+						}
+						if(keywordsplit[i].contains("http"))
+						{
+							keywordtemp= keywordtemp.replace(keywordsplit[i],"");
+						}
+					
+						if(keywordsplit[i].length()<4 )
+						{
+							//System.out.println("AAAAAH" +keywordsplit[i]);
+							keywordtemp= keywordtemp.replace(keywordsplit[i],"");
+						}
+						for ( int z=0;  z< keywordsplit[i].length();z++)
+						{
+							if (alphabet.indexOf(keywordsplit[i].charAt(z))==-1)
+							{
+								keywordtemp= keywordtemp.replace(keywordsplit[i],"");
+							}
+						
+						}
+					
+						
+
+					}
+					keywordtemp= keywordtemp.replaceAll("[-+^#!?,.()@ÂÃâÅï]*", "");
+					keywordtemp= keywordtemp.replaceAll("[^\\p{L}\\p{Nd}]"," ");
+
+					keywordsplit = keywordtemp.split(" ");
+
+					for ( int i=0; i< keywordsplit.length; i++)
+					{
+						if(keywordsplit[i].length()<4 )
+						{
+						continue;
+						}
+						if(keywordscount.containsKey(keywordsplit[i]))
+						{
+							keywordscount.put(keywordsplit[i],keywordscount.get(keywordsplit[i])+1);
+							//System.out.println(keywordsplit[i]);
+						}
+						else
+						{
+							keywordscount.put(keywordsplit[i], 0);
+						}
+
+					}
+
+
+
+
+					// Userdetails
+					String Userstatusescount = products.get("USER_STATUSESCOUNT");
+					String UserFollowers = products.get("USER_FOLLOWERSCOUNT");
+					String UserLocation = products.get("USER_LOCATION");
+					String UserFriendscount = products.get("USER_FRIENDSCOUNT");
+					String UserCreationDate = products.get("USER_CREATIONDATE");
+					String UserDescription = products.get("USER_DESCRIPTION");
+					String UserListedCount = products.get("USER_LISTEDCOUNT");
+					String tweetid = products.get("TWEET_id");
+
+
+					//if( coordinates==null || coordinates.contains("null") || coordinates=="" || coordinates.split(",").length<2 || tweetContent.contains("marathon")==false)
+
+					if(!ids.containsKey(tweetid))
+					{
+						TweetModel tempmodel = new TweetModel(keywordtemp,creationDate,coordinates,tweetContent,tweetUser,
+								tweetScreenName,UserFollowers,UserFriendscount,Userstatusescount,language,tweetid,tweetplace,tweetretweetcount,tweetreplytostatus,tweetreplytousername,UserDescription,UserCreationDate,UserListedCount);
+
+						double distance = 1000000000;
+						City closestc=null;
+
+						for ( City ci: allcities)
+						{
+							if(ci.population<100000)
+							{
+								continue;
+							}
+							double delta = getDistanceInMeters(tempmodel,ci);
+							//System.out.println(delta);
+							if(delta < distance)
+							{
+								closestc = ci;
+								distance = delta;
+							}
+
+
+						}
+						//System.out.println("Closest city: "+ closestc.name +  " lat: " + closestc.lat + " long: "+ + closestc.longi + " tlat: " + tempmodel.latitude + " tlong: "+ tempmodel.longitude );
+						String statement="";
+						try
+						{
+							//csv OUTPUT
+							//writer.append(""+tempmodel.date +"\t"+tempmodel.Content+"\t"+tempmodel.Author+"\t"+tempmodel.screenname+"\t"+tempmodel.latitude +"\t"+tempmodel.longitude +"\t"+tempmodel.userstatscount +"\t" + tempmodel.followers +"\t"+ tempmodel.friendscount + "\t"+ tempmodel.id + "\t"+tempmodel.lang+ "\t"+tempmodel.tweetplace+ "\t"+tempmodel.tweetretweetcount+"\t"+tempmodel.tweetreplytostatus+"\t"+tempmodel.tweetreplytousername+ "\t"+tempmodel.containsurl+","+tempmodel.authordescription+"\t"+tempmodel.listedcount+ "\t"+tempmodel.userdate+ "t"+tempmodel.keywords+ "\t"+sentiment+"\n");
+							statement = "INSERT INTO \"tweetdata\" (\"creationDate\",\"tweetContent\",\"tweetUser\",\"tweetScreenName\",\"latitude\",\"longitude\",\"userStatusCount\",\"userFollowers\",\"userFriendscount\",\"tweetid\",\"language\",\"place\",\"retweetcount\",\"replytostatus\",\"replytousername\",\"containsUrl\",\"authordescription\",\"userlistedcount\",\"userCreationdate\",\"keywords\",\"ccityname\", \"ccitylat\",\"ccitylong\",\"sentiment\", \"datasetid\",polygeo) VALUES  ("+"\'"+tempmodel.date +"\'"+","+"\'"+tempmodel.Content+"\'"+","+"\'"+tempmodel.Author+"\'"+","+"\'"+tempmodel.screenname+"\'"+","+tempmodel.longitude +","+tempmodel.latitude +","+ "\'"+tempmodel.userstatscount +"\'"+"," + tempmodel.followers +","+ tempmodel.friendscount + ","+ tempmodel.id + ","+"\'"+tempmodel.lang+ "\'"+","+"\'"+tempmodel.tweetplace+ "\'"+","+tempmodel.tweetretweetcount+","+tempmodel.tweetreplytostatus+","+"\'"+tempmodel.tweetreplytousername+ "\'"+","+tempmodel.containsurl+","+tempmodel.authordescription+","+"\'"+tempmodel.listedcount+ "\'"+","+"\'"+tempmodel.userdate+ "\'"+","+"\'"+tempmodel.keywords+ "\'"+","+"\'"+getMysqlRealScapeString(closestc.name)+ "\'"+","+ closestc.lat+","+ closestc.longi+","+"\'"+sentiment+"\',3"+",ST_GeomFromText(\'POINT("+tempmodel.longitude+" "+tempmodel.latitude+")\',-1)" +");\n";
+							st.execute(statement);
+
+
+
+
+
+						}
+						catch ( Exception e)
+						{
+							e.printStackTrace();
+							System.out.println(statement);
+							failureCount++;
+							
+						}
+					}
+					ids.put(tweetid,0);
+
+
+
+
+
+
+
+
+				}
+
+
+				try
+				{
+					if ( writer != null)
+						writer.close( );
+				}
+				catch ( IOException e)
+				{
+				}
+
+				keywordscount = MapUtil.sortByValue( keywordscount );
+				int counter = 0;
+				for(Map.Entry<String, Integer> e : keywordscount.entrySet()){
+
+					System.out.println(e.getKey() + " = " + e.getValue());
+					counter++;
+					if(counter==100)
+						break;
+
+				}
+
+				products.close();
+
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		System.out.println("Tweets with geotagg Found: "+ids.size());
+		System.out.println("Skipped "+failureCount+" Tweets");
+	}
+
+
+	public static  double getDistanceInMeters(TweetModel tm, City c)
+	{
+		double tmlat = Math.toRadians(tm.latitude);
+		double tmlong = Math.toRadians(tm.longitude);
+		double clat = Math.toRadians(c.lat);
+		double clong = Math.toRadians(c.longi);
+		float radiusOfEarth = 6371000;// Earth's radius in meters.
+		double diffLatitude =  clat -tmlat;
+		double diffLongitude = clong -  tmlong;
+		double a = Math.sin(diffLatitude / 2) * Math.sin(diffLatitude / 2) +
+				Math.cos(tmlat) * Math.cos(clat) *  Math.sin(diffLongitude / 2) * Math.sin(diffLongitude / 2);
+		double dc = 2 * Math.asin(Math.sqrt(a));
+		double distance = radiusOfEarth * dc;
+		return distance;
+
+	}
+
+	public static String getMysqlRealScapeString(String str) {
+		String data = null;
+		if (str != null && str.length() > 0) {
+			str = str.replace("\\", "\\\\");
+			str = str.replace("'", "\\'");
+			str = str.replace("\0", "\\0");
+			str = str.replace("\n", "\\n");
+			str = str.replace("\r", "\\r");
+			str = str.replace("\"", "\\\"");
+			str = str.replace("\\x1a", "\\Z");
+			data = str;
+		}
+		return data;
+	}
+
+
+
+
+
+
+
+}

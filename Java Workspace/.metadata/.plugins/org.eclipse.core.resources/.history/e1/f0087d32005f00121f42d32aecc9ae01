@@ -1,0 +1,113 @@
+import java.io.FileInputStream;
+import java.math.BigInteger;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+
+import com.Ostermiller.util.CSVParser;
+import com.ibm.db2.jcc.am.Connection;
+
+public class Populate {
+	private static String sourceLocation = "C://Twitter.csv";
+	private static int TWEET_ID = 0;
+	private static int TWEET_CREATIONDATE = 1;
+	private static int TWEET_CONTENT = 2;
+	private static int TWEET_RETWEETED = 3;
+	private static int TWEET_LOCATION = 4;
+	private static int TWEET_COORDS = 5;
+	private static int TWEET_SOURCE = 6;
+	private static int TWEET_RETWEETCOUNT = 7;
+	private static int TWEET_FAVORITED = 8;
+	private static int TWEET_SENSITIVE = 9;
+	private static int USER_ID = 10;
+	private static int USER_NAME = 11;
+	private static int USER_SCREENNAME = 12;
+	private static int USER_CREATIONDATE = 13;
+	private static int USER_LANGUAGE = 14;
+	private static int USER_STATUSESCOUNT = 15;
+	private static int USER_FOLLOWERSCOUNT = 16;
+	private static int USER_LOCATION = 17;
+	private static int USER_DESCRIPTION = 18;
+	private static int USER_FRIENDSCOUNT = 19;
+	private static int USER_TIMEZONE = 20;
+	private static int USER_LISTEDCOUNT = 21;
+	private static int USER_UTCOFFSET = 22;
+
+	private static Connection conn;
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		try {
+			Class.forName("com.ibm.db2.jcc.DB2Driver");
+			conn = (Connection) DriverManager
+					.getConnection(
+							"jdbc:db2://phobos111.inf.uni-konstanz.de:50000/TWITTER:currentSchema=DMUELLER;",
+							"DMUELLER", "muellerd11");
+			if (conn != null) {
+//				parseTweets();
+				PreparedStatement stmt = conn
+						.prepareStatement("INSERT INTO TWEETDETAIL (TWEETID, CONTENT) VALUES (5, test);");
+				stmt.setLong(1, 1000L);
+				stmt.setString(2, "'really a fan of drinking on my own. Would much rather drink at the pub with friends.'");
+				stmt.execute();
+				conn.close();
+
+			} else {
+				System.out.println("Connection failed");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private static void parseTweets() {
+		CSVParser parser;
+		String[][] data;
+		try {
+			parser = new CSVParser(new FileInputStream(sourceLocation));
+			parser.changeDelimiter('\t');
+			 parser.setEscapes("'", "''");
+			// String t;
+			// int c = 0;
+			// int lastLine = 1;
+			// while ((t = parser.nextValue()) != null && c<1000){
+			// if(parser.lastLineNumber() != lastLine){
+			// System.out.println();
+			// }
+			// System.out.print(t+"\t");
+			// lastLine = parser.lastLineNumber();
+			// c++;
+			// }
+			int c = 0;
+			data = parser.getAllValues();
+			PreparedStatement stmt = conn
+					.prepareStatement("INSERT INTO TWEETDETAIL (TWEETID, CONTENT) VALUES (?, ?);");
+			for (String[] row : data) {
+				c++;
+				if (c == 1) {
+					continue;
+				}
+				if (row[TWEET_ID] != null && row[TWEET_CONTENT] != null) {
+					BigInteger id = new BigInteger(row[TWEET_ID]);
+					String content = new String(row[TWEET_CONTENT]);
+					System.out.println(content);
+					// content = StringEscapeUtils.escapeJava(content);
+					stmt.setLong(1, id.longValue());
+					stmt.setString(2, content);
+					stmt.executeUpdate();
+				}
+				if (c % 1000 == 0) {
+					System.out.println(c);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+}
