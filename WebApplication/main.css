@@ -1,0 +1,600 @@
+
+#cesiumContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+.rankparam
+{
+    padding:2px !important;
+    float:right;
+}
+
+html {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    height: 100%;
+}
+
+
+
+.loadie {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #fff;
+    width: 0;
+    height: 5px;
+    -webkit-transition: width 0.3s ease-out;
+    -moz-transition: width 0.3s ease-out;
+    -o-transition: width 0.3s ease-out;
+    transition: width 0.3s ease-out;
+    box-shadow: 0px 1px 5px rgba(0,0,0,0.25);
+    z-index: 9999;
+}
+
+input[type="button"]
+{
+    padding:0px;
+    margin:0px;
+    margin-bottom:2px;
+   
+}
+
+#legend
+{
+    color:#fff;
+}
+
+#overlay
+{
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    width: 150px;
+   
+    text-align: center;
+    padding-top:15px;
+    padding-bottom:15px;
+    background-color: rgba(255,255,255,0.8);
+    color: #000;
+    font-size:10px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -50px;
+    margin-top: -50px;
+    
+}
+
+
+
+.hashtagtag
+{
+    float:left;
+    width:300px;
+}
+
+.hashtagtagheading
+{
+    float:left;
+    width:300px;
+    padding-top:190px;
+}
+
+.hashtaglist
+{
+    padding-top:5px;
+    padding-bottom:5px;
+    height:18px;
+  border-bottom:1px solid #eee;
+
+}
+
+.rule
+{
+ 
+}
+
+.line
+{
+    margin-left:500px;
+}
+
+.rankedlist
+{
+       
+    min-height:20px;
+ clear:both;
+     border-bottom:1px solid #eee;
+}
+
+.coloursl
+{
+    width:20px;
+    height:20px;
+    display:block;
+}
+
+.rankedlistdetails
+{
+    float:left;
+    width:45px;
+   
+}
+
+.rankedlistdetailsheading
+{
+    float:left;
+    width:45px;
+    padding-top:190px;
+}
+
+
+.hashtagrankedoverview
+{
+   
+   padding-bottom:10px;
+    margin-left:560px;
+}
+
+.rankedliststatus
+{
+    float:left;
+    width:60px;
+}
+
+.rankedliststatusheading
+{
+    float:left;
+    width:60px;
+     padding-top:190px;
+}
+
+.expanddetails
+{
+    
+    padding:0;
+    margin:0;
+    padding-left:2px;
+    padding-right:2px;
+    width:20px;
+}
+
+
+.myTimeline {
+    display: block;
+    position: absolute;
+    bottom: -1px;
+    left: 169px;
+    right: 0px;
+    height: 59px;
+}
+
+.amount
+{
+    float:left;
+    width:100px;
+}
+
+.hashtagtag a
+{
+    text-decoration:none;
+}
+
+.hashtagtag a:hover
+{
+    text-decoration:underline;
+}
+
+.amountheading
+{
+    float:left;
+    width:100px;
+    padding-top:190px;
+}
+
+.clustersamount
+{
+    float:left;
+    width:100px;
+}
+
+#colorlegend
+{
+     float:left;
+    width:30px;
+}
+
+.clustersamountheading
+{
+    float:left;
+    width:70px;
+    padding-top:190px;
+}
+
+.hashtagshow
+{
+    float:left;
+    width:100px;
+   
+}
+
+.list-rotated span:hover
+{
+    cursor:pointer;
+    text-decoration:underline;
+}
+
+#tweetcontent
+{
+    font-size:11px;
+    width:500px;
+    height:0px;
+}
+
+.hashtagshowrankedtweetsheading
+{
+    float:left;
+    width:20px;
+     padding-top:190px;
+   
+}
+
+.hashtagshowranked
+{
+    float:left;
+    width:70px;
+    
+   
+}
+
+.hashtagshowtweets
+{
+    float:left;
+    width:20px;
+    
+   
+}
+
+
+.hashtagshowrankedheading
+{
+    float:left;
+    width:70px;
+      padding-top:175px;
+   
+}
+
+input.showcheck
+{
+    padding:2px;
+    font-size:11px;
+}
+
+.hashtagstatus
+{
+    float:left;
+    width:100px;
+   
+}
+
+.anglesuminfotext
+{
+     float:left;
+    padding-top:190px;
+    width:40px;
+   
+}
+
+
+.list-rotated {
+   text-align: justify;
+    padding:0px;
+    margin:0px;
+}
+
+.minimum
+{
+    font-size:10px;
+}
+ 
+.list-rotated:after {
+   content: "";
+ 
+   display: inline-block;
+}
+ 
+.list-rotated > li {
+   display: inline-block;
+    font-size:11px;
+    width: 17px;
+   line-height: 18px;
+}
+ 
+.list-rotated > li > * {
+   display: inline-block;
+   white-space: nowrap;
+ 
+   transform: translate(0,100%) rotate(-90deg);
+   transform-origin: 0 0;
+ 
+   vertical-align: bottom;
+}
+ 
+.list-rotated > li > *:before {
+   content: "";
+   float: left;
+   margin-top: 100%;
+}
+
+
+.featuresheading
+{
+      float:left;
+   width:760px;
+    margin-top:50px;
+}
+
+.features
+{
+    float:left;
+   width:760px;
+    height:20px;
+    
+}
+
+
+
+.clusteringstatus
+{
+   
+}
+
+.anglesuminfotop
+{
+    float:left;
+     width:60px;
+}
+
+.angletext
+{
+    float:left;
+     width:60px;
+}
+
+
+
+.clusteringstatusranked
+{
+    float:left;
+    width:50px;
+    
+}
+
+
+.angleline
+        {
+           
+            height: 1px;
+            background-color: #06a;
+            z-index: 1000; 
+           
+            font-size:30px;
+           
+            width:8px;
+          -webkit-transform-origin: top left;
+            -moz-transform-origin: top left;
+            -o-transform-origin: top left;
+            -ms-transform-origin: top left;
+            position:absolute;
+        }
+
+.angleline2
+        {
+           
+            height: 1px;
+            background-color: #06a;
+            z-index: 1000; 
+           
+            font-size:30px;
+           
+            width:20px;
+       
+        }
+
+.anglesuminfo
+{
+   margin-top:8px;
+    float:left;
+    font-size:10px;
+}
+
+.group {
+  margin-bottom: 1em;
+}
+
+.axis {
+  font: 10px sans-serif;
+  position: relative;
+ 
+  z-index: 2;
+}
+
+.axis text {
+  -webkit-transition: fill-opacity 250ms linear;
+}
+
+.axis path {
+  display: none;
+}
+
+#paralleloptions
+{
+    float:left;
+}
+
+.axis line {
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.cesium-widget-credits, .cesium-viewer-animationContainer, .cesium-viewer-timelineContainer
+{
+    display:none !important;
+}
+
+.axis.top {
+  background-image: linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -o-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -moz-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -webkit-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -ms-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  top: 0px;
+  padding: 0 0 24px 0;
+}
+
+.axis.bottom {
+  background-image: linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -o-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -moz-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -webkit-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -ms-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  bottom: 0px;
+  padding: 24px 0 0 0;
+}
+
+.horizon {
+  border-bottom: solid 1px #000;
+  overflow: hidden;
+  position: relative;
+}
+
+.horizon {
+  border-top: solid 1px #000;
+  border-bottom: solid 1px #000;
+}
+
+.horizon + .horizon {
+  border-top: none;
+}
+
+.horizon canvas {
+  display: block;
+}
+
+.horizon .title,
+.horizon .value {
+  bottom: 0;
+  line-height: 30px;
+  margin: 0 6px;
+  position: absolute;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  white-space: nowrap;
+}
+
+.horizon .title {
+  left: 0;
+}
+
+.horizon .value {
+  right: 0;
+}
+
+.line {
+    margin-left:572px;
+    top:318px !important;
+  background: #000;
+    height:100%;
+    
+  z-index: 2;
+}
+
+
+.box {
+  font: 10px sans-serif;
+}
+
+.box line,
+.box rect,
+.box circle {
+  fill: cornsilk;
+  stroke: #000;
+  stroke-width: 1px;
+}
+
+.box line.avg
+{
+    stroke: #FF0000;
+    stroke-width: 2px;
+}
+
+.background path {
+  fill: none;
+  stroke: #ccc;
+  stroke-opacity: .4;
+  shape-rendering: crispEdges;
+}
+
+.foreground path {
+  fill: none;
+  stroke: steelblue;
+  stroke-opacity: .7;
+}
+
+.brush .extent {
+  fill-opacity: .3;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+
+.box .center {
+  stroke-dasharray: 3,3;
+}
+
+.box .outlier {
+  fill: none;
+  stroke: #000;
+}
+
+.hashtagrankedboxplot
+{
+    float:left;
+}
+
+.hashtagrankedboxplot.axis {
+  font: 12px sans-serif;
+}
+ 
+.hashtagrankedboxplot .axis path,
+.hashtagrankedboxplot .axis line {
+    display:inherit;
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+#parallelcord
+{
+padding-left:250px;
+}
+ 
+.hashtagrankedboxplot.x.axis path { */
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}

@@ -1,0 +1,3393 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Use correct character set. -->
+        <meta charset="utf-8">
+        <!-- Tell IE to use the latest, best version (or Chrome Frame if pre-IE11). -->
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+        <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <title>Trajectory Based Visual Analysis and Ranking of Twitter Data</title>
+        <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+
+        <script src="../js/box.js"></script>
+        <script src="../js/cubism.js"></script>
+
+        <script src="../Build/Cesium/Cesium.js"></script>
+        <script src="http://libs.cartocdn.com/cartodb.js/v3/3.11/cartodb.core.js"></script>
+        <script src="../Build/Cesium/cesium-cartodb.js"></script>
+        <script src="../js/converttimestamptodate.js"></script> 
+        <script src="../js/loaddialogs.js"></script>
+
+        <script src="../js/sylvester.js"></script>
+        <script src="../js/underscore.js"></script>
+        <script src="../js/underscore.math.js"></script>
+        <script type="text/javascript" src="../js/d3.parcoords.js"></script>
+        <script src="../js/nlptools.js"></script>
+        <script src="../js/Tweet.js"></script>
+        <script src="../js/TweetJSON.js"></script>
+        <script src="../js/Hashtag.js"></script>
+        <script src="../js/minheap.js"></script>
+        <script src="../js/topic.js"></script>
+        <script src="../js/word.js"></script>
+        <script src="../js/graham_scan.js"></script>
+        <script src="../js/parameter.js"></script>
+
+        <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+        <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+        <script type="text/javascript" src="../js/jquery.tipsy.js"></script>
+        <link href="../tipsy.css" rel="stylesheet" type="text/css" />
+        <link href="../css/d3.parcoords.css" rel="stylesheet" type="text/css" />
+
+        <script src="../js/jquery.dialogextend.js"></script>
+
+        <script src="../js/cluster.js"></script>
+        <script src="../js/jquery.loadie.js"></script>
+
+        <link type="text/css" href="../css/custom-theme/jquery-ui-1.10.0.custom.css" rel="stylesheet" />
+        <link rel="stylesheet" type="text/css" media="screen, print, projection"  href="../main.css">
+        <style>
+            @import url(../Build/Cesium/Widgets/lighter.css);
+            @import url(../Build/Cesium/Widgets/widgets.css);
+
+        </style>
+    </head>
+    <body class="cesium-lighter">
+
+        <!-- HTML PART !-->
+        <div id="cesiumContainer" class="cesium-lighter"></div>
+        <div id="toolbar" title="Map Visual Options">
+            <table>
+                <tbody><tr>
+                    <td>Brightness</td>
+                    <td>
+                        <input min="0" max="3" step="0.02" data-bind="value: brightness, valueUpdate: 'input'" type="range">
+                        <input size="5" data-bind="value: brightness" type="text">
+                    </td>
+                    </tr>
+                    <tr>
+                        <td>Contrast</td>
+                        <td>
+                            <input min="0" max="3" step="0.02" data-bind="value: contrast, valueUpdate: 'input'" type="range">
+                            <input size="5" data-bind="value: contrast" type="text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Hue</td>
+                        <td>
+                            <input min="0" max="3" step="0.02" data-bind="value: hue, valueUpdate: 'input'" type="range">
+                            <input size="5" data-bind="value: hue" type="text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Saturation</td>
+                        <td>
+                            <input min="0" max="3" step="0.02" data-bind="value: saturation, valueUpdate: 'input'" type="range">
+                            <input size="5" data-bind="value: saturation" type="text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Gamma</td>
+                        <td>
+                            <input min="0" max="3" step="0.02" data-bind="value: gamma, valueUpdate: 'input'" type="range">
+                            <input size="5" data-bind="value: gamma" type="text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Enable lighting</td>
+                        <td>
+                            <input id="enableLighting" type="checkbox"/>
+
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="calculationoptions" title="Calculation Options">
+            DBSCAN Neighborhood Minimum: <input type="text" id="dbscanneighborhoodmin" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            <div id="dbscanneighborhoodminslider"></div><br>
+            DBSCAN Neighborhood Radius: <input type="text" id="dbscanradius" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            <div id="dbscanradiusslider"></div><br>
+            DBSCAN Max Time Distance: <input type="text" id="dbscantime" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            <div id="dbscantimeslider"></div><br>
+        </div>
+        <div id="legend" title="Legend">
+
+            Topic Classification<br>
+            <div style="width:200px;padding:2px;background-color:#a6cee3;text-align:center;">Computers & Technology</div>
+
+
+            <div style="width:200px;padding:2px;background-color:#1f78b4;text-align:center;">Education</div>
+
+
+            <div style="width:200px;padding:2px;background-color:#b2df8a;text-align:center;">Family</div>
+
+
+            <div style="width:200px;padding:2px;background-color:#33a02c;text-align:center;">Food</div>
+
+
+            <div style="width:200px;padding:2px;background-color:#fb9a99;text-align:center;">  Health </div>
+
+
+            <div style="width:200px;padding:2px;background-color:#e31a1c;text-align:center;"> Marketing</div>
+
+            <div style="width:200px;padding:2px;background-color:#fdbf6f;text-align:center;">Music</div>
+
+
+            <div style="width:200px;padding:2px;background-color:#ff7f00;text-align:center;"> News & Media</div>
+
+            <div style="width:200px;padding:2px;background-color:#cab2d6;text-align:center;">Other</div>
+
+            <div style="width:200px;padding:2px;background-color:#6a3d9a;text-align:center;"> Pets</div>
+
+            <div style="width:200px;padding:2px;background-color:#ffff99;text-align:center;">Politics</div>
+
+            <div style="width:200px;padding:2px;background-color:#b15928;text-align:center;"> Recreation & Sports</div>
+
+
+        </div>
+        <div id="rankingoptions" title="Ranking Parameters">
+            Topic diversity: <input type="text" id="rankingtopic" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            <div id="rankingtopicslider"></div><br>
+            structure linearity: <input type="text" id="rankingstructure" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            <div id="rankingstructureslider"></div><br>
+            sentiment variance: <input type="text" id="rankingsentiment" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            <div id="rankingsentimentslider"></div><br>
+            speed variance: <input type="text" id="rankingspeed" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            <div id="rankingspeedslider"></div><br>
+            <input type="button" id="startranking" value="Rank trajectories">
+        </div>
+
+
+
+
+        <script>
+
+            //Variables
+
+            //Loader Element
+            $('body').loadie(); 
+            var basemapProvider = new Cesium.CartoDBImageryProvider({
+                url: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', // e.g.: http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png,
+                credit: 'Basemap courtesy of CartoDB'
+            });
+            Cesium.BingMapsApi.defaultKey = 'AhA74EgUw-i6TJIsgWUldmcyF6WEBbBZQe4cbesW53P4MKzJhUeTvsZ2Hy2xvnE9';
+            var allTweets  =   [];
+            var TweetProcessingLength=10;
+            var ClusterProcessingLength=1;
+            var currentlyProcessingTweet=0;
+            var currentlyProcessingCluster=0;
+            var paralleldata = [];
+
+            var clusterRadius= 50;
+            var clusterMinPoints = 20;
+            var calculating=false;
+
+            var highestFriends = 0;
+            var highestRetweet = 0;
+            var highestClusterTweets = 0;
+            var highestDisplacement = 0;
+            var highestStructureVariance = 0;
+            var minimumRetweet = 0;
+            var highestClusterdistance = 0;
+            var highestStatuscount = 0;
+            var highestFollowerscount = 0;
+            var highestTimeDifference = 0;
+            var highestTrajectoryDistance = 0;
+            var highestSpeed = 0;
+            var highestTimeVariance =0;
+            var highestSpeedVariance=0;
+            var highestDistancevariance=0;
+            var highestClusteramount=0;
+            var highestAreaVariance=0;
+            var lowestCertaintyRatio=1;
+
+            var allClusters = [];
+            var allHashtags = [];
+            var sentimap = [];
+            var ammap = [];
+            var ctmap = [];
+            var edumap = [];
+            var foodmap = [];
+            var familymap = [];
+            var context = cubism.context();
+            var colours = ["#67001f","#b2182b","#d6604d","#f4a582","#fddbc7","#d1e5f0","#92c5de","#4393c3","#2166ac","#053061"];
+            window.sentimapJSON =null;
+            var firstparcoord=true;
+
+
+
+            var approachedCluster =0;
+
+            var viewer = new Cesium.Viewer('cesiumContainer',
+                                           {
+                sceneMode : Cesium.SceneMode.SCENE2D, 
+                imageryProvider: basemapProvider,
+                baseLayerPicker: false,
+
+
+            });
+
+            //CLOCK
+            viewer.clock.startTime =  Cesium.JulianDate.fromDate(new Date(2014,1,1,0,0,0,0));
+            viewer.clock.currentTime = Cesium.JulianDate.fromDate(new Date(2014,1,1,0,0,0,0));
+            viewer.clock.stopTime =  Cesium.JulianDate.fromDate(new Date(2014,1,3,0,0,0,0));
+            viewer.clock.clockRange =  Cesium.ClockRange.LOOP_STOP;
+            viewer.clock.clockstep = Cesium.ClockStep.TICK_DEPENDENT;
+
+            viewer.clock.shouldAnimate =  false;
+            viewer.timeline.zoomTo(viewer.clock.startTime, viewer.clock.stopTime);
+            viewer.timeline.updateFromClock();
+
+            var retweetsscale = 10000
+            var first = true;
+            var scene = viewer.scene;
+            var polylines = new Cesium.PolylineCollection();
+            var parcoords;
+
+
+            var primitives = scene.primitives;
+
+            var globe = scene.globe;
+
+            globe.enableLighting = true;
+
+            /**
+* Initializing Sort methods 
+*
+*/
+            $(document).ready(function() {
+
+                $('#enableLighting').val($(this).is(':checked'));
+
+                $('#enableLighting').change(function() {
+                    if($(this).is(":checked")) {
+
+                        $(this).attr("checked", true);
+                    }
+                    globe.enableLighting = $(this).is(':checked');  
+                });
+
+
+                $("#startranking").click(function() {
+
+
+                    //Ranking method
+                    var ArrayToSort = $(".rankedlist");
+
+
+
+                    ArrayToSort.sort(function (a, b) {
+
+                        var rescaletopic = d3.scale.linear().domain([0,1]).range([0,100]);
+                        var rescalesentiment = d3.scale.linear().domain([0,50]).range([0,100]);
+                        var rescalestructure = d3.scale.linear().domain([0,50]).range([0,100]);
+                        var rescalespeed = d3.scale.linear().domain([0,highestSpeedVariance]).range([0,100]);
+
+                        var i_sentiment=  $( "#rankingsentimentslider" ).slider( "value" );
+                        var i_structure=$( "#rankingstructureslider" ).slider( "value" );
+                        var i_speed=$( "#rankingspeedslider" ).slider( "value" );
+                        var i_topic= $( "#rankingtopicslider" ).slider( "value" );
+
+
+                        var idA =$(a).attr('id').replace('rankedlistelement','');
+                        var idB = $(b).attr('id').replace('rankedlistelement','');
+
+                        console.log(getHashtagFromAll(idA).topicSimpson);
+
+                        var distancea=(Math.pow((rescalesentiment(parseFloat(getHashtagFromAll(idA).sentimentturnratio))-i_sentiment),2)+Math.pow((rescaletopic(getHashtagFromAll(idA).topicSimpson)-i_topic),2)+Math.pow((rescalespeed(parseFloat(getHashtagFromAll(idA).speedvariance))-i_speed),2)+Math.pow((rescalestructure(parseFloat(getHashtagFromAll(idA).turnpointratio))-i_structure),2))/4;
+
+                        var distanceb =(Math.pow((rescalesentiment(parseFloat(getHashtagFromAll(idB).sentimentturnratio))-i_sentiment),2)+Math.pow((rescaletopic(getHashtagFromAll(idB).topicSimpson)-i_topic),2)+Math.pow((rescalespeed(parseFloat(getHashtagFromAll(idB).speedvariance))-i_speed),2)+Math.pow((rescalestructure(parseFloat(getHashtagFromAll(idB).turnpointratio))-i_structure),2))/4;
+
+
+
+                        console.log("A="+distancea);
+                        console.log("B="+distanceb);
+
+                        var contentA = new Number();
+                        var contentB = new Number();
+                        contentA = parseFloat(distancea);
+                        contentB = parseFloat(distanceb);
+
+
+
+
+                        return (contentA < contentB) ? -1 : (contentA > contentB) ? 1 : 0;
+                    });
+
+
+                    $("#sortedhashtags").empty();
+                    $("#sortedhashtags").append(ArrayToSort);  
+                    $('svg rect').tipsy({ 
+                        gravity: 'w', 
+                        html: true, 
+                        title: function() {
+                            var d = this.__data__, val = d.val, info = d.name ;
+                            return d.name +' value:' + val; 
+                        }
+                    });      
+
+
+                });
+
+
+
+
+            });
+			//url : '//cesiumjs.org/tilesets/terrain/smallterrain'
+            var terrainProvider = new Cesium.CesiumTerrainProvider({
+				url : '//assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+				requestWaterMask: true
+            });
+            viewer.scene.terrainProvider = terrainProvider;
+
+            //Cluster representation
+            var clustercanvas = document.createElement('canvas');
+            clustercanvas.width = 20;
+            clustercanvas.height =20;
+            var clustercontext2D = clustercanvas.getContext('2d');
+
+            clustercontext2D.beginPath();
+            clustercontext2D.arc(10, 10, 10, 0, Cesium.Math.TWO_PI, true);
+            clustercontext2D.closePath();
+            clustercontext2D.fillStyle = 'rgba(255, 255, 255,0.6)';
+            clustercontext2D.fill();
+
+
+
+
+            //Tweet Representation
+            var canvas = document.createElement('canvas');
+            canvas.width = 30;
+            canvas.height = 30;
+            var context2D = canvas.getContext('2d');
+
+            context2D.beginPath();
+            context2D.arc(2, 2, 2, 0, Cesium.Math.TWO_PI, true);
+            context2D.closePath();
+            context2D.fillStyle = 'rgb(255, 255, 255)';
+            context2D.fill();
+            var ellipsoid = scene.globe.ellipsoid;
+
+            //open the dialogs
+            loaddialogs();
+
+
+            var imageryLayers = viewer.scene.imageryLayers;
+
+            // The viewModel tracks the state of our mini application.
+            var viewModel = {
+                brightness: 0,
+                contrast: 0,
+                hue: 0,
+                saturation: 0,
+                gamma: 0
+            };
+            // Convert the viewModel members into knockout observables.
+            Cesium.knockout.track(viewModel);
+
+            // Bind the viewModel to the DOM elements of the UI that call for it.
+            var toolbar = document.getElementById('toolbar');
+            Cesium.knockout.applyBindings(viewModel, toolbar);
+
+            // Make the active imagery layer a subscriber of the viewModel.
+            function subscribeLayerParameter(name) {
+                Cesium.knockout.getObservable(viewModel, name).subscribe(
+                    function(newValue) {
+                        if (imageryLayers.length > 0) {
+                            var layer = imageryLayers.get(0);
+                            layer[name] = newValue;
+                        }
+                    }
+                );
+            }
+            subscribeLayerParameter('brightness');
+            subscribeLayerParameter('contrast');
+            subscribeLayerParameter('hue');
+            subscribeLayerParameter('saturation');
+            subscribeLayerParameter('gamma');
+
+            // Make the viewModel react to base layer changes.
+            function updateViewModel() {
+                if (imageryLayers.length > 0) {
+                    var layer = imageryLayers.get(0);
+                    viewModel.brightness = layer.brightness;
+                    viewModel.contrast = layer.contrast;
+                    viewModel.hue = layer.hue;
+                    viewModel.saturation = layer.saturation;
+                    viewModel.gamma = layer.gamma;
+                }
+            }
+            imageryLayers.layerAdded.addEventListener(updateViewModel);
+            imageryLayers.layerRemoved.addEventListener(updateViewModel);
+            imageryLayers.layerMoved.addEventListener(updateViewModel);
+            updateViewModel();
+
+            jQuery.fn.sortElements = (function(){
+
+                var sort = [].sort;
+
+                return function(comparator, getSortable) {
+
+                    getSortable = getSortable || function(){return this;};
+
+                    var placements = this.map(function(){
+
+                        var sortElement = getSortable.call(this),
+                            parentNode = sortElement.parentNode,
+
+                            // Since the element itself will change position, we have
+                            // to have some way of storing its original position in
+                            // the DOM. The easiest way is to have a 'flag' node:
+                            nextSibling = parentNode.insertBefore(
+                                document.createTextNode(''),
+                                sortElement.nextSibling
+                            );
+
+                        return function() {
+
+                            if (parentNode === this) {
+                                throw new Error(
+                                    "You can't sort elements if any one is a descendant of another."
+                                );
+                            }
+
+                            // Insert before flag:
+                            parentNode.insertBefore(this, nextSibling);
+                            // Remove flag:
+                            parentNode.removeChild(nextSibling);
+
+                        };
+
+                    });
+
+                    return sort.call(this, comparator).each(function(i){
+                        placements[i].call(getSortable.call(this));
+                    });
+
+                };
+
+            })();
+
+            /**
+* Append colorlegend boxes and checkboxfunctionallity
+*
+*/
+            $( document ).ready(function() {
+                $( "#colorlegend" ).append( "<div class=\"minimum\">max</div>");
+
+                for ( var x=colours.length-1; x>=0; x--)
+                {
+                    $( "#colorlegend" ).append( "<div class=\"coloursl\" style=\"background-color:"+colours[x]+";\"></div>");
+                }
+
+                $( "#colorlegend" ).append( "<div class=\"minimum\">min</div>");
+
+
+
+                // Append checkbox and drawing functionallity for Trajectory
+                $("#rankedlist").on("change","input.showrankedcheck",function() {
+
+                    console.log("checked");
+                    var id = $(this).attr('id').replace('hr','');
+                    if(this.checked) {
+                        //Do stuff
+
+                        drawAllClustersFromHashtag(id);
+                    }
+                    else
+                    {
+                        removeFromMap(id);
+                    }
+
+                }); 
+
+
+
+
+                // Append checkbox and drawing functionallity for Tweets
+
+                $("#rankedlist").on("change","input.showrankedchecktweets",function() {
+
+                    console.log("checked");
+                    var id = $(this).attr('id').replace('ht','');
+                    if(this.checked) {
+                        //Do stuff
+
+                        drawAllClustersTweetsFromHashtag(id);
+                    }
+                    else
+                    {
+                        removeFromTweets(id);
+                    }
+
+                }); 
+
+
+
+
+
+            });
+
+            getHashtaggs();
+            var instances = [];
+            //fetchData(8000,0);
+            // fetchClusters("20picturesofharryfromyourcameraroll");
+
+
+            /**
+* Returns all hashtags
+*
+*/
+            function getHashtaggs()
+            {
+                downloadUrl("datainterfacehashtags.php", function(data) {
+                    var xml = data.responseXML;
+                    var hashtags = xml.documentElement.getElementsByTagName("hashtags");
+                    var tweetsamount =0;
+                    for (var i = 0; i < hashtags.length; i++) {
+
+                        var hashtagtag = hashtags[i].getElementsByTagName("hashtag")[0].childNodes[0].nodeValue;
+                        var amount = hashtags[i].getElementsByTagName("frequency")[0].childNodes[0].nodeValue;
+
+                        var hashid = hashtags[i].getElementsByTagName("hashtagid")[0].childNodes[0].nodeValue;
+                        $( "#chooseHashtags" ).append( "<div class=\"hashtaglist\" id=\"hashlistelement"+hashid+"\"><div class=\"hashtagtag\" >" + hashtagtag + "</div><div class=\"amount\">" + amount + "</div>"+"<div class=\"hashtagshow\"><input type=\"button\" class=\"showcheck\" name=\"hashtagshow\" hashtag=\""+hashtagtag+"\" value=\"add\" amount=\""+amount+"\" id=\"h"+hashid+"\"> </div><div class=\"clusteringstatus\" id=\"clstat"+hashid+"\">Loading</div> </div><div style=\"clear:both\"></div>" );
+                    }
+
+
+                    //Button functionality to add it to the calculation list. 
+                    $('.showcheck:button').click(function() {
+
+                        var hash = $(this).attr('hashtag').replace('#','');
+                        var id = $(this).attr('id').replace('h','');
+                        var hashamount = $(this).attr('amount');
+
+
+
+                        calculateClusters(hash,id,hashamount);
+
+                        // fetchClusters(hash);
+
+                    }); 
+
+
+
+                });
+
+
+            }
+
+
+            /**
+* Draws all tweets
+*
+*/
+            function drawAllTweets(){
+
+
+                var endpoint;
+                var tempTweet;
+
+
+
+                for ( var g=0;g < window.TweetProcessingLength; g++)
+                {
+
+
+                    var currentTweet = g + currentlyProcessingTweet;
+
+                    tempTweet = allTweets[currentTweet];
+                    billboards.add({
+                        position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees( tempTweet.longitude, tempTweet.latitude)),
+                        color : Cesium.Color.GREEN,
+                        image: canvas,
+                        imageIndex : 0
+                    });
+                    /*  var polyline = polylines.add({
+                        positions : Cesium.Cartesian3.fromDegreesArray([
+                            tempTweet.longitude, tempTweet.latitude,
+                            tempTweet.longitude-0.01, tempTweet.latitude-0.01
+
+                        ]),
+                        material : Cesium.Material.fromType('Color', {
+                            color : new Cesium.Color(1.0, 1.0, 1.0, 1.0)
+                        })
+                    });*/
+                    currentlyProcessingTweet++;
+                    endpoint = g + currentlyProcessingTweet;
+                    if(allTweets.length- (g + currentlyProcessingTweet)<=1)
+                    {
+
+                        // console.log("Break@:"+ g + currentlyProcessingTweet);
+                        break;
+                    }
+
+
+
+
+
+                }
+                scene.primitives.add(billboards);
+
+
+
+
+
+                return endpoint;
+            }  
+
+            /**
+* removes related layers from the map 
+*
+*/
+
+            function removeFromMap(hashid){
+
+                var currentHashtag = getHashtagFromAll(hashid);
+                console.log(scene.primitives.remove(currentHashtag.billboards));
+                console.log(scene.primitives.remove(currentHashtag.clusterblocks));
+                console.log(scene.primitives.remove(currentHashtag.primitives)); 
+                console.log(scene.primitives.remove(currentHashtag.labels)); 
+                for (var x=0;x<currentHashtag.labels.length;x++)
+                {
+                    scene.primitives.remove(currentHashtag.labels[x]);
+                }
+
+
+
+
+            }
+
+            /**
+* removes all entities from a hashtag from the map
+*
+*/
+
+
+            function removeFromTweets(hashid){
+
+                var currentHashtag = getHashtagFromAll(hashid);
+
+                for (var x=0;x<currentHashtag.maptweets.length;x++)
+                {
+                    viewer.entities.remove(currentHashtag.maptweets[x]);
+                }
+            }
+
+
+            /**
+* draws all clustertweets from a hashtag on the map 
+*
+*/
+
+            function drawAllClustersTweetsFromHashtag(hashid){
+
+                var billboards = new Cesium.BillboardCollection();
+                var currentHashtag = getHashtagFromAll(hashid);
+                var entities = [];
+                var allClusters =  currentHashtag.clusters;
+
+                for ( var g=0;g < allClusters.length; g++)
+                {
+
+                    //all tweets
+                    for( var s=0; s<allClusters[g].tweetsincluster.length; s++)
+                    {
+                        var imageurl = '../img/tweet.png';
+                        if(allClusters[g].tweetsincluster[s].sentiment == 1)
+                        {
+                            imageurl = '../img/tweetp.png';
+                        }
+                        else if (allClusters[g].tweetsincluster[s].sentiment == -1)
+                        {
+                            imageurl = '../img/tweetn.png';
+                        }   
+                        var head = allClusters[g].tweetsincluster[s].tweetUser + " - " + allClusters[g].tweetsincluster[s].creationDate;s
+
+                        var tweet = viewer.entities.add({
+                            name : head,
+                            description:  allClusters[g].tweetsincluster[s].tweetContent,
+                            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees( allClusters[g].tweetsincluster[s].longitude, allClusters[g].tweetsincluster[s].latitude)),
+                            billboard : {
+                                image : imageurl,
+                                verticalOrigin : Cesium.VerticalOrigin.BOTTOM
+                            },
+
+                        });
+                        entities.push(tweet);
+
+                    }
+
+                    //mouse handler... handled by entity now
+                    /* handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+                    handler.setInputAction(
+                        function (movement) {
+                            if (Cesium.defined(billboards)) {
+                                var pickedObject = scene.pick(movement.endPosition);
+                                if (typeof pickedObject !== 'undefined' && typeof pickedObject.id !== "undefined" ) {
+                                    //console.log(pickedObject.id);
+
+
+                                    $("#tweetcontent").html("\""+pickedObject.id+"\"");
+
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                        },
+                        Cesium.ScreenSpaceEventType.MOUSE_MOVE
+                    );*/
+
+
+                }
+                currentHashtag.maptweets = entities;
+
+
+
+
+            }
+
+
+            /**
+* draws 3d mapping trajectory and clusters
+*
+*/
+            function drawAllClustersFromHashtag(hashid){
+
+
+
+                var billboards = new Cesium.BillboardCollection();
+                var clusterblocks = new Cesium.PolylineCollection();
+                var endpoint;
+                var tempCluster;
+
+
+
+
+
+
+                viewer.timeline.zoomTo(viewer.clock.startTime, viewer.clock.stopTime);
+                var currentHashtag = getHashtagFromAll(hashid);
+
+                var allClusters =  currentHashtag.clusters;
+
+                var starticon = billboards.add({
+                    image : '../img/start.png',
+                    position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees( allClusters[0].centroidlong, allClusters[0].centroidlat)),
+                    imageIndex : 0,
+                });
+
+                if(allClusters.length>1)
+                {
+                    var finishicon = billboards.add({
+                        image : '../img/finish.png',
+                        position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees( allClusters[allClusters.length-1].centroidlong, allClusters[allClusters.length-1].centroidlat)),
+                        imageIndex : 0,
+                    });
+                }
+
+
+
+                for ( var g=0;g < allClusters.length; g++)
+                {
+
+
+
+
+                    tempCluster = allClusters[g];
+                    tempCluster.countWords();
+                    tempCluster.sortWordmap();
+                    tempCluster.countCategory();
+
+                    circleScale = d3.scale.linear().domain([0,highestClusterTweets]).range([0.5,1]);
+
+                    //  console.log(tempCluster.sortedtopics.pop());
+                    var thetopic = tempCluster.sortedtopics.pop();
+                    var thetopictext =thetopic.term;
+                    var topiccolor =  Cesium.Color.fromCssColorString(getTopicColor(thetopictext));
+
+                    var billboard = billboards.add({
+                        position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees( tempCluster.centroidlong, tempCluster.centroidlat)),
+                        color : topiccolor,
+                        image: clustercanvas,
+                        imageIndex : 0,
+                        scale :   circleScale(tempCluster.tweetsincluster.length),
+                    });
+
+                    var sentColor = d3.scale.linear()
+                    .domain(d3.range(0, 1, 1.0 / (colours.length - 1)))
+                    .range(colours);
+                    var tc = d3.scale.linear().domain([-1,1]).range(["red","green"]);
+
+                    var clustersent = tc(tempCluster.avgsent);
+                    console.log("sentc"+clustersent);
+                    var height = tempCluster.avgcred;
+                    var friendsheight = d3.scale.linear().domain([0,highestFriends]).range([0,100]);
+                    var sentheight = d3.scale.linear().domain([0,highestFriends]).range([0,2000]);
+                    height = friendsheight(height);
+                    var sentic= Cesium.Color.fromCssColorString(clustersent);
+                    var color = Cesium.Color.fromHsl((0.6 - (friendsheight/100 * 0.5)), 1.0, 0.5);
+                    var surfacePosition = Cesium.Cartesian3.fromDegrees(tempCluster.centroidlong, tempCluster.centroidlat, 0);
+                    var heightPosition = Cesium.Cartesian3.fromDegrees(tempCluster.centroidlong, tempCluster.centroidlat, 2000);
+
+                    //Create Lines for Friend
+                    var friendsinfo = clusterblocks.add({
+                        positions : new Cesium.Cartesian3.fromDegreesArrayHeights([tempCluster.centroidlong, tempCluster.centroidlat, 0, tempCluster.centroidlong, tempCluster.centroidlat,friendsheight(tempCluster.avgcred)*20000000]),
+                        followSurface:false,
+                        material : Cesium.Material.fromType('Color', {
+                            color : color
+                        })
+                    });
+
+                    currentlyProcessingCluster++;
+                    endpoint = g + currentlyProcessingCluster;
+
+
+
+                }
+
+                //camera movement when play 
+                /*
+                viewer.clock.onTick.addEventListener(function(clock) {
+
+                    if(  Cesium.JulianDate.fromDate(allClusters[approachedCluster].averageTimeDate ) < viewer.clock.currentTime )
+
+                    {
+                        console.log("Next cluster arrived");
+
+                        scene.camera.flyTo({
+                            destination : Cesium.Cartesian3.fromDegrees(allClusters[approachedCluster].centroidlong, allClusters[approachedCluster].centroidlat, 1000.0)
+                        });
+                        approachedCluster++;
+                    }
+
+
+
+
+                });*/
+
+                currentHashtag.billboards = billboards;
+                currentHashtag.clusterblocks = clusterblocks;
+
+                scene.primitives.add(billboards);
+                scene.primitives.add(clusterblocks);
+
+
+                if(allClusters.length>1)
+                {
+                    drawClustersConnection(hashid); 
+                }
+
+
+                return endpoint;
+            }
+
+            /**
+* @deprecated loading function
+*
+*/
+            function processFunctionWithLoader(processfunction,processamount) {
+
+
+                var percent_complete = ((processfunction()/processamount))*100;
+
+                // console.log(percent_complete);
+                //show loading process
+                $('body').loadie(percent_complete/100); 
+
+
+                if(percent_complete<100)
+                {
+                    //  console.log("Again");
+                    setTimeout(processFunctionWithLoader(processfunction,processamount),10);	
+                }
+                else
+                {
+                    currentlyProcessingTweet = 0;
+
+                    /*scene.primitives.add(new Cesium.Primitive({
+                    geometryInstances : instances,
+                    appearance : new Cesium.PerInstanceColorAppearance()
+                }));
+                primitives.add(polylines);*/
+
+                }
+
+            }
+
+            /**
+* draws cluster connection
+* @deprecated
+*
+*/
+            function drawClustersConnection(hashid)
+            {
+
+                var currentHashtag = getHashtagFromAll(hashid);
+                var allClusters=  currentHashtag.clusters;
+                var localPolylines = new Cesium.PolylineCollection();
+                var primitiveCollection = new Cesium.PrimitiveCollection();
+                var labelCollection = new Cesium.PrimitiveCollection();
+
+
+
+                var startTrack = allClusters[0];
+                var bigdiff=false;
+                var onlyclose=true;
+                // console.log("size"+(allClusters.length));
+                var bucket=0;
+                var random = [0,1,2,3,4,5,6,7,8,9,10,-1,-2,-3,-4,-5,-6,-7,-8,-9];
+                for (var t=0; t<allClusters.length; t++)
+                {
+
+                    var currentCluster= allClusters[t];
+                    var nextCluster = allClusters[t+1]
+
+                    var lastfontsize= 0;
+                    var mid=false;
+                    // Word Representation
+                    var labels = new Cesium.LabelCollection();
+                    for (var l=0; l<10 && l<allClusters[t].sortedwords.size(); l++)
+                    {
+
+                        //Generate text
+                        var tempword = allClusters[t].sortedwords.pop();
+                        var labeltext = tempword.term;
+                        var lat = parseFloat(allClusters[t].centroidlat)-random[l]/10;
+                        var center = Cesium.Cartesian3.fromDegrees(allClusters[t].centroidlong, parseFloat(allClusters[t].centroidlat));
+                        var labelsize = tempword.amount;
+                        var fillc = new Cesium.Color(1.0,1.0,0.0);
+                        labelscale = d3.scale.linear().domain([1,1000]).range([15,100]);
+
+                        var fonttext = labelscale(labelsize) +"px Arial,sans-serif";
+
+                        var fontsize = new Cesium.ConstantProperty(fonttext);
+                        var thecolor = tempword.avgsent;
+
+                        wordColor = d3.scale.linear().domain([-10,0, 10]).range(["red","yellow", "green"]);
+
+                        if(thecolor<-10)
+                        {
+
+                            fillc = new Cesium.Color(1.0,0.0,0.0);
+                        }
+                        else if(thecolor>10)
+                        {
+                            fillc = new Cesium.Color(0.0,0.5,0.0);
+                        }
+                        else {
+                            fillc = new Cesium.Color.fromCssColorString(wordColor(thecolor));
+                        }
+
+
+                        labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+                        labels.add({
+                            position : new Cesium.Cartesian3(0, 0, 0.0),
+                            text     : labeltext,
+                            font: fonttext,
+                            // translucencyByDistance : new Cesium.NearFarScalar(1.5e4, 1.0, 1.5e6, 0.0),
+
+                            fillColor : fillc,
+                            outlineColor : Cesium.Color.BLACK,
+                            outlineWidth : 0.5,
+                            pixelOffset : Cesium.Cartesian2.fromArray([(random[l]*10.0),(lastfontsize+labelscale(labelsize))]),
+                            style : Cesium.LabelStyle.FILL_AND_OUTLINE
+                        });
+                        if(l<10)
+                        {
+                            lastfontsize+= labelscale(labelsize);
+                        }
+                        else
+                        {
+                        }
+                    }
+                    primitives.add(labels);
+                    currentHashtag.labels.push(labels);
+                    if(t<allClusters.length-1)
+                    {
+                        var currentCluster= allClusters[t];
+                        var nextCluster = allClusters[t+1]
+
+                        var time1 = new Date( Math.round(currentCluster.timenode)*1000);
+                        var time2 = new Date(  Math.round(nextCluster.timenode)*1000);
+
+
+
+                        var timedifferenceinms = time2.getTime()-time1.getTime();
+
+
+                        var stopTrack = nextCluster;
+
+                        var tInterval1 = new Cesium.TimeInterval({
+                            start :Cesium.JulianDate.fromDate(startTrack.averageTimeDate),
+                            stop : Cesium.JulianDate.fromDate(stopTrack.averageTimeDate),
+                            isStartTimeIncluded : true,
+                            iSStopTimeIncluded : false,
+                            data: 2
+                        });
+
+                        console.log("Highest Speed:"+highestSpeed);
+
+                        speedWidth = d3.scale.linear().domain([0,highestSpeed]).range([5,60]);
+                        var dist =allHashtags[0].distanceinKMll2(currentCluster.centroidlat,currentCluster.centroidlong,nextCluster.centroidlat,nextCluster.centroidlong);
+                        var timedi =( new Date(nextCluster.avgtime)- new Date(currentCluster.avgtime));
+
+                        var trajectorywidth = speedWidth(Math.floor(dist/timedi));
+
+                        console.log("dist:"+dist+" timedi:"+trajectorywidth);
+                        if(timedifferenceinms > 0)
+                        {
+                            if((timedifferenceinms/1000)<1440  )
+                            {
+
+                                primitiveCollection.add(new Cesium.Primitive({
+                                    geometryInstances : new Cesium.GeometryInstance({
+                                        geometry : new Cesium.PolylineGeometry({
+                                            positions : Cesium.Cartesian3.fromDegreesArray([
+                                                currentCluster.centroidlong, currentCluster.centroidlat,
+                                                nextCluster.centroidlong, nextCluster.centroidlat
+                                            ]),
+                                            width : 0.0,
+
+                                            followSurface: true
+
+
+                                        }),
+                                        attributes: {
+                                            color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0))
+                                        }
+                                    }),
+                                    appearance : new Cesium.PolylineMaterialAppearance({
+                                        material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
+
+                                    })
+                                }));}
+                            else{
+                                viewer.timeline.addTrack(tInterval1,2, Cesium.Color.GREEN, Cesium.Color.WHITE);
+                                $('.cesium-viewer-timelineContainer').height("+=2");
+                                viewer.timeline.updateFromClock();
+                                startTrack=nextCluster;
+                                onlyclose = false;
+
+                                primitiveCollection.add(new Cesium.Primitive({
+                                    geometryInstances : new Cesium.GeometryInstance({
+                                        geometry : new Cesium.PolylineGeometry({
+                                            positions : Cesium.Cartesian3.fromDegreesArray([
+                                                currentCluster.centroidlong, currentCluster.centroidlat,
+                                                nextCluster.centroidlong, nextCluster.centroidlat
+                                            ]),
+                                            width : trajectorywidth,
+
+                                            followSurface: true
+
+
+                                        }),
+                                        attributes: {
+                                            color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
+                                        }
+                                    }),
+                                    appearance : new Cesium.PolylineMaterialAppearance({
+                                        material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
+
+                                    })
+                                }));
+                            }
+                        }
+
+
+                        bucket++;
+                    }
+                }
+                if(onlyclose)
+                {
+                    viewer.timeline.addTrack(tInterval1,2, Cesium.Color.GREEN, Cesium.Color.WHITE);
+                    $('.cesium-viewer-timelineContainer').height("+=2");
+                    viewer.timeline.updateFromClock();
+                }
+                primitives.add(primitiveCollection);
+                currentHashtag.primitives = primitiveCollection;
+
+
+
+
+            }
+            /**
+* deprecated asynchronous call function
+*
+*/
+            function makeUrlcall(amount,offset){
+                downloadUrl("datainterface.php?searchquery=camto1mill&dataset=3&amount="+amount+"&offset="+offset, function(data) {
+                    var xml = data.responseXML;
+                    var markers = xml.documentElement.getElementsByTagName("tweet");
+                    var dailyTweets = {};
+
+                    console.log("lulz"+markers.length);
+                    for (var i = 0; i < markers.length; i++) {
+
+
+                        var thisTweetsdate = markers[i].getElementsByTagName("creationDate")[0].childNodes[0].nodeValue;
+                        tempTweet = new Tweet(
+                            markers[i].getElementsByTagName("creationDate")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("tweetContent")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("tweetUser")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("tweetScreenName")[0].childNodes[0].nodeValue,
+                            markers[i].getElementsByTagName("longitude")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("latitude")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("userStatusCount")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("userFollowers")[0].childNodes[0].nodeValue,
+                            markers[i].getElementsByTagName("userLocation")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("userFriendscount")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("language")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("place")[0].childNodes[0].nodeValue,
+                            markers[i].getElementsByTagName("retweetcount")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("replytostatus")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("replytousername")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("containsUrl")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("authordescription")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("userlistedcount")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("userCreationdate")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("keywords")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("sentiment")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("tweetID")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("ccityname")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("ccitylat")[0].childNodes[0].nodeValue,markers[i].getElementsByTagName("ccitylong")[0].childNodes[0].nodeValue);
+
+
+                        allTweets.push(tempTweet);
+                    }
+
+
+                    var start = new Date().getTime();
+
+                    processFunctionWithLoader(drawAllTweets,allTweets.length);
+
+
+                    var end = new Date().getTime();
+                    console.log(end - start);
+                }); 
+
+
+            }
+
+
+
+
+
+            /**
+* fetches all cluster from the db
+* @deprecated
+*
+*/
+            function fetchClusters(hash){
+                var url="datainterfaceclusters.php?hashtg="+hash;
+                $("body").append("<div id='overlay'><img src='../img/ajax-loader.gif' /><br> Loading ClusterData... Please Wait</div>");
+                $.ajaxSetup({
+                    async: false
+                });
+                var datarequest = $.getJSON(url,function(data){
+                    $.each(data.clusters, function(i,cluster){
+
+
+                        var tempCluster = new Cluster(null, cluster.centroidlat,cluster.centroidlong , cluster.hashtag , cluster.size, cluster.avgtime , cluster.clusterid);
+
+                        // if(tempCluster.size>1)
+                        //{
+                        allClusters.push(tempCluster);
+
+                        // }
+
+
+                    });
+                });
+                datarequest.done(
+
+                    function() {  
+
+
+
+
+                        console.log("Whoot "+allClusters.length);
+
+                        for(var o=0; o<allClusters.length;o++)
+                        {
+                            $.ajaxSetup({
+                                async: false
+                            });
+                            fetchClustersTweets(allClusters[o].cid,o);
+                        }
+
+                    }
+                )
+            }
+
+            /**
+* fetches all cluster from the db
+* @deprecated
+*
+*/
+            function calculateClusters(hash,hashid,amount){
+                var url="datainterfacehashtweets.php?hashtg="+hash;
+                var thehashid = '#clstat'+hashid;
+                $(thehashid).html("Getting related Tweets");
+
+
+
+                var posi = allHashtags.length;
+				console.log("Posi: ",posi)
+                var tempHash = new Hashtag(hash,hashid,amount,posi);
+
+                var datarequest = $.getJSON(url,function(data){
+					console.log("data: ",data)
+                    $.each(data.tweets, function(i,tweet){
+
+
+                        var tempTweet =  new Tweet(tweet.creationdate,tweet.tweetContent,tweet.tweetUser,tweet.tweetScreenName,tweet.longitude,tweet.latitude,tweet.userStatusCount,tweet.userFollowers,tweet.userLocation,tweet.userFriendscount,tweet.language,tweet.place,tweet.retweetcount,tweet.replytostatus,tweet.replytousername,tweet.containsUrl,tweet.authordescription,tweet.userlistedcount,tweet.userCreationdate,tweet.keywords,tweet.sentiment,tweet.tweetID,tweet.ccityname,tweet.ccitylat,tweet.ccitylong,tweet.category);
+
+
+                        var tempTweetJson = new TweetJSON(tweet.tweetid,tweet.latitude,tweet.longitude);
+
+                        // if(tempCluster.size>1)
+                        //{
+                        tempHash.tweets.push(tempTweet);
+
+                        // }
+
+
+                    });
+                });
+                datarequest.done(
+
+                    function() {  
+
+
+                        tempHash.arrayposition=allHashtags.length;
+                        allHashtags.push(tempHash);
+
+
+
+                        calculateClustersWorker(tempHash);
+
+                        //  console.log("Runned "+runned);
+                    }
+                )
+
+            }
+
+            function fetchClustersTweets(cid,clusternumber){
+
+
+                var url="datainterfaceclustertweets.php?cid="+cid;
+                //$("body").append("<div id='overlay'><img src='../img/ajax-loader.gif' /><br> Loading ClusterData... Please Wait</div>");
+
+                var datarequest = $.getJSON(url,function(data){
+                    $.each(data.clustertweets, function(i,tweet){
+
+
+                        var tempTweet =  new Tweet(tweet.creationdate,tweet.tweetContent,tweet.tweetUser,tweet.tweetScreenName,tweet.longitude,tweet.latitude,tweet.userStatusCount,tweet.userFollowers,tweet.userLocation,tweet.userFriendscount,tweet.language,tweet.place,tweet.retweetcount,tweet.replytostatus,tweet.replytousername,tweet.containsUrl,tweet.authordescription,tweet.userlistedcount,tweet.userCreationdate,tweet.keywords,tweet.sentiment,tweet.tweetID,tweet.ccityname,tweet.ccitylat,tweet.ccitylong,tweet.category);
+
+                        // if(tempCluster.size>1)
+                        //{
+
+                        allClusters[clusternumber].tweets.push(tempTweet);
+                        // }
+
+
+                    });
+                });
+                datarequest.done(
+
+                    function() {  
+                        if(  clusternumber >= allClusters.length-1)
+                        {
+                            console.log(clusternumber);
+                            drawAllClusters();
+
+
+
+                        }
+                    }
+                )
+            }
+
+
+
+            function downloadUrl(url, callback) {
+                var start = new Date().getTime();
+                var request = window.ActiveXObject ?
+                    new ActiveXObject('Microsoft.XMLHTTP') :
+                new XMLHttpRequest;
+
+                request.onreadystatechange = function() {
+                    if (request.readyState == 4) {
+
+
+                        request.onreadystatechange = doNothing;
+                        callback(request, request.status);
+                    }
+                };
+                var end = new Date().getTime();
+                console.log("urldownload: "+(end - start));
+                request.open('GET', url, true);
+                request.send(null);
+            }
+            function doNothing() {
+
+            }
+            function toRad(tor) {
+                return tor * Math.PI / 180;
+            }
+
+            function distanceinKM(tweet1, tweet2)
+            {
+
+                var tm1lat = toRad(tweet1.latitude);
+                var tm1long = toRad(tweet1.longitude);
+                var tm2lat = toRad(tweet2.latitude);
+                var tm2long = toRad(tweet2.longitude);
+                var radiusOfEarth = 6371000;// Earth's radius in meters.
+                var diffLatitude =  tm2lat -tm1lat;
+                var diffLongitude = tm2long -  tm1long;
+                var a = Math.sin(diffLatitude / 2) * Math.sin(diffLatitude / 2) +
+                    Math.cos(tm1lat) * Math.cos(tm2lat) *  Math.sin(diffLongitude / 2) * Math.sin(diffLongitude / 2);
+                var dc = 2 * Math.asin(Math.sqrt(a));
+                var distance = radiusOfEarth * dc;
+                return distance/1000;
+
+            }
+
+            /**
+* starts worker for each hashtag chosen
+ @param chosen hashtag to start calculating clusters
+* 
+*
+*/
+
+            function calculateClustersWorker(hashtag)
+            {
+                var hashtagid =hashtag.hashid;
+                var arraypos =hashtag.arrayposition;
+                var hashtagrealid = "#clstat"+hashtag.hashid;
+                var hashtagtag = hashtag.name;
+                var amount = hashtag.size;
+                var elementtoremove = "#hashlistelement"+hashtag.hashid;
+
+                dbscanWorker = new Worker("../js/dbscan.js");
+                window.start = new Date().getTime();
+                console.log(hashtagid + " " + hashtagrealid);
+
+
+
+                var rankedlisthtml = "<div class=\"rankedlist\" id=\"rankedlistelement"+hashtagid+"\"><div class=\"rankedlistdetails\" ><input type=\"button\" class=\"expanddetails\" name=\"expanddetails\"  value=\"+\" id=\"re"+hashtagid+"\" disabled> </div><div class=\"hashtagtag\" ><a href=\"https://tagdef.com/"+hashtagtag+"\" title=\"Click for more information on this hashtag\" target=\"_blank\">#" + hashtagtag + "</a></div>";
+
+
+
+
+
+
+                $( "#sortedhashtags" ).append( rankedlisthtml +"<div class=\"amount\">" + amount + "</div>"+"<div class=\"clustersamount\" id=\"clusteramount"+hashtagid+"\">Calculating...</div> <div class=\"features\" ><div id=\"featuresSquare"+hashtagid+"\"></div></div><div class=\"anglesuminfo\"><div id=\"angleline"+hashtagid+"\" class=\"angleline\" ></div><div id=\"angleline2"+hashtagid+"\" class=\"angleline\" ></div><div id=\"angletext"+hashtagid+"\" class=\"angletext\" ></div></div><div class=\"clusteringstatusranked\" id=\"ranked"+hashtagid+"\"><img src=\"../img/loadingsmall.gif\"/></div><div class=\"hashtagshowranked\"><input type=\"checkbox\" class=\"showrankedcheck\" name=\"hashtagsrankhow\" value=\""+hashtagtag+"\" id=\"hr"+hashtagid+"\"> </div><div class=\"hashtagshowtweets\"><input type=\"checkbox\" class=\"showrankedchecktweets\" name=\"hashtagsranktweets\" value=\""+hashtagtag+"\" id=\"ht"+hashtagid+"\"> </div></div>" );
+
+
+
+
+
+
+
+
+
+                if(first)
+                {
+                    //Button functionality to add it to the calculation list. 
+                    $('#sortedhashtags').on('click', '.expanddetails', function() {
+
+                        if($(this).val()==='-')
+                        {     
+                            console.log('minus');
+                            var id = $(this).attr('id').replace('re','');
+
+                            var listelementtoclose = "#hashtagdetails"+id;
+                            $( listelementtoclose ).remove();
+
+                            $(this).val('+');
+
+
+
+
+
+                        }
+                        else if($(this).val()==='+')
+                        {     
+
+                            var id = $(this).attr('id').replace('re','');
+
+                            currentHash=  getHashtagFromAll(id);
+
+
+                            console.log( currentHash);
+
+
+                            var listelementtoexpand = "#rankedlistelement"+id;
+                            $( listelementtoexpand ).append( "<div id=\"hashtagdetails"+id+"\"><div class=\"hashtagrankedboxplot\" id=\"boxplot"+id+"\"></div><div class=\"hashtagrankedoverview\" id=\"rldet"+id+"\"><div class=\"rankedlistdetailsvis\" >Hashtag Details </div></div></div>" );
+                            createVisCub(currentHash);
+                            createBoxPlot(currentHash);
+                            $(this).val('-');
+
+                        }
+                    });
+                    first=false;
+                }
+
+
+
+
+
+                $( elementtoremove ).remove();
+
+
+                dbscanWorker.onmessage = function( e ){
+                    if(e.data.status === "COMPLETE"){
+
+                        givetime();
+                        try{
+                            console.log("COMPLETE");
+
+
+                            var calculatedClustersJSON =   JSON.parse((e.data.clusters));
+                            console.log(e.data.clusters.length);
+                            if(e.data.clusters.length<=2)
+                            {
+
+                                var idfornothingfound= "#clusteramount"+allHashtags[arraypos].hashid;
+                                console.log(idfornothingfound);
+                                $(idfornothingfound).html("NO CLUSTERS");
+
+                            }
+                            else
+                            {
+                                console.log("notstopped");
+                                var convexHull= new ConvexHullGrahamScan();
+                                var NoiseJSON =   JSON.parse((e.data.noise));
+                                allHashtags[arraypos].convexHull = convexHull;
+                                for (var nkey=0;nkey<NoiseJSON.length;nkey++)
+
+                                {
+                                    var tempTweet = allHashtags[arraypos].tweets[nkey];
+                                    allHashtags[arraypos].noise.push(tempCluster);
+
+                                }
+
+
+
+                                var objects=0;
+
+                                for (var key=0;key<calculatedClustersJSON.length;key++)
+
+                                {
+
+                                    var tempClusterTweets = [];
+                                    $.each( calculatedClustersJSON[key].tweets, function(key, value) {
+
+                                        var tempTweet = allHashtags[arraypos].tweets[value];
+                                        tempClusterTweets.push(tempTweet)
+                                    })
+
+                                    var tempCluster = new Cluster(tempClusterTweets,0);
+                                    objects++;
+
+                                    if(tempClusterTweets.length>1)
+                                    {
+                                        allHashtags[arraypos].clusters.push(tempCluster);
+                                    }
+                                }
+
+
+                                for (var b=0; b< allHashtags[arraypos].clusters.length;b++)
+                                {
+
+                                    allHashtags[arraypos].clusters[b].calculateTimeBoxplot();
+                                    allHashtags[arraypos].clusters[b].calculateCentroid();
+                                    allHashtags[arraypos].clusters[b].calculateSentiment();
+                                    allHashtags[arraypos].clusters[b].calculateAvgTimeDiff();
+                                    allHashtags[arraypos].clusters[b].calculateCredibilityBoxplot();
+                                    allHashtags[arraypos].clusters[b].calculateFriendscountBoxplot();
+                                    allHashtags[arraypos].clusters[b].calculateRetweetBoxplot();
+                                    allHashtags[arraypos].clusters[b].calculateStatuscountBoxplot();
+                                    allHashtags[arraypos].clusters[b].calculateFollowersBoxplot();
+                                    allHashtags[arraypos].clusters[b].countCertainty();
+                                    allHashtags[arraypos].clusters[b].countCategory();
+                                    allHashtags[arraypos].clusters[b].calculateTopicSimpson();
+                                    allHashtags[arraypos].clusters[b].calculateMaxArea();
+                                    allHashtags[arraypos].convexHull.addPoint(allHashtags[arraypos].clusters[b].centroidlong,allHashtags[arraypos].clusters[b].centroidlat);
+
+
+                                }  
+                                allHashtags[arraypos].calculateDistance();
+                                allHashtags[arraypos].calculateAngles();
+                                allHashtags[arraypos].calculateSentiment();
+                                allHashtags[arraypos].calculateAvgTimeDiff();
+                                allHashtags[arraypos].countCredibility();
+                                allHashtags[arraypos].calculateFriends();
+                                allHashtags[arraypos].calculateRetweets();
+                                allHashtags[arraypos].calculateStatuscount();
+                                allHashtags[arraypos].calculateFollowers();
+                                allHashtags[arraypos].calcTimeVariance();
+                                allHashtags[arraypos].countCertainty();
+
+                                /*  console.log(allHashtags[arraypos].avgFriendscount);
+                            console.log("POS: "+  allHashtags[arraypos].positivePortion +"NEG:" + allHashtags[arraypos].negativePortion+"NEUTRAL:" + allHashtags[arraypos].neutralPortion);
+                            console.log("Distance: "+  allHashtags[arraypos].clusterdistance +"Displacement:" +allHashtags[arraypos].displacement+"Totaldist:" +allHashtags[arraypos].totaldistance);*/
+
+                                var hullPoints = convexHull.getHull();
+                                //  console.log(hullPoints);
+                                var angletoupdate = "#angleline"+hashtagid;
+                                var line1 = $(angletoupdate);
+                                var angletexttoupdate ="#angletext"+hashtagid;
+
+
+
+
+                                var attributes = getAttributes(arraypos);
+
+                                setAngle(line1, allHashtags[arraypos].direction);
+
+                                $(angletexttoupdate).html( Math.round(allHashtags[arraypos].direction) +"°");
+                                var elementtoupdate = "#ranked"+hashtagid;
+                                var elementtoenabledetails = "#re"+hashtagid;
+                                var clustersnumtoupdate = "#clusteramount"+hashtagid;
+
+                                $(elementtoenabledetails).prop('disabled', false);
+                                $(elementtoupdate).html("<img src=\"../img/readysmall.png\"/>");
+                                $(clustersnumtoupdate).html(allHashtags[arraypos].clusters.length);
+
+
+
+
+
+                                paralleldata.push({"hashtag": allHashtags[arraypos].name,"hashid": allHashtags[arraypos].hashid,"clusteramount": allHashtags[arraypos].clusters.length, "topicdiversity": allHashtags[arraypos].topicSimpson, "speedvariance": allHashtags[arraypos].speedvariance, "sentimentlinearity": allHashtags[arraypos].sentimentturnratio, "structurelinearity":allHashtags[arraypos].turnpointratio,"displacementtourratio":allHashtags[arraypos].displacementtourratio, "credibilityvariance": allHashtags[arraypos].credibilityvariance, "areavariance":allHashtags[arraypos].areavariance, "timevariance":allHashtags[arraypos].clusterTimeVariance});
+
+
+
+
+                                //paralleldata.push({name: "Asparagus", protein: 2.2, calcium: 0.024, sodium: 0.002});
+                                // paralleldata.push( {name: "Butter", protein: 0.85, calcium: 0.024, sodium: 0.714});
+
+
+                                //Show all parameters results
+
+
+                                var sqaurecontid = "#featuresSquare"+hashtagid;
+                                var squareContainer = d3.select(sqaurecontid).append("svg")
+                                .attr("width", 810)
+                                .attr("height", 20);
+
+                                var rectangle = squareContainer.selectAll("rect")
+                                .data(attributes)
+                                .enter()
+                                .append("rect");
+
+                                /* Sort everytime a new Hashtag comes in
+                            var ArrayToSort = $(".rankedlist");
+
+
+
+                            ArrayToSort.sort(function (a, b) {
+
+                                var idA =$(a).attr('id').replace('rankedlistelement','');
+                                var idB = $(b).attr('id').replace('rankedlistelement','');
+                                var contentA = parseInt(getHashtagFromAll(idA).tweets.length);
+                                var contentB = parseInt(getHashtagFromAll(idB).tweets.length)
+                                return (contentA < contentB) ? -1 : (contentA > contentB) ? 1 : 0;
+                            });
+
+
+                            //sort hashtags by tweetsize
+                            $("#sortedhashtags").empty();
+                            $("#sortedhashtags").append(ArrayToSort);  
+
+                            */
+
+
+
+                                allHashtags[arraypos].calculationReady=true;
+                                calculating=false;
+                                updateRectData();
+
+                                $('svg rect').tipsy({ 
+                                    gravity: 'w', 
+                                    html: true, 
+                                    title: function() {
+                                        var d = this.__data__, val = d.val, info = d.name ;
+                                        return d.name +' value:' + val; 
+                                    }
+                                });
+
+
+
+                                var tectAttributes = rectangle
+                                .attr("x", function (d) { return (20*d.posi)+d.posi; })
+                                .attr("y", function (d) { return 0; })
+                                .attr('stroke', '#cccccc')
+                                .attr('stroke-width', '1')
+                                .attr("width", function (d) { return 20; })
+                                .attr("height", function (d) { return 20; })
+                                .style("fill", function(d) { return d.color; });
+
+
+                                addParallelCoord(paralleldata);
+
+
+
+
+                            }}
+                        catch(es)
+                        {
+
+                        }
+
+
+
+                    }
+                    else{
+                        calculating=true;
+                        console.log("Running");
+                    }
+                };
+
+                dbscanWorker.addEventListener('error', function(error){
+                    console.log(' Error Caused by worker: '+error.filename
+                                + ' at line number: '+error.lineno
+                                + ' Detailed Message: '+error.message);
+                });
+                /* dbscanWorker.addEventListener('message', function(e) {
+                    console.log('Worker said: ', e.data);
+                }, false);*/
+
+
+
+
+                dbscanWorker.postMessage( {
+                    data : JSON.stringify(allHashtags[arraypos].tweets),
+                    eps :  $( "#dbscanradiusslider" ).slider( "option", "value" ),
+                    minPts : $( "#dbscanneighborhoodminslider" ).slider( "option", "value" ),
+                    timeframe: $( "#dbscantimeslider" ).slider( "option", "value" )
+                }
+                                        )
+
+                // console.log("Clusters: "+dbscan.cluster.length);
+
+
+                /* for (var x=0; x<dbscan.cluster.length; x++ )
+                {
+
+                    var tempCluster =new Cluster (Tweets=dbscan.cluster[x],allTweets);
+
+                    allClusters.push(tempCluster);
+                }*/
+
+                /*
+                window.allClusters.sort(function(a,b){return a.averageTime - b.averageTime});
+
+
+                for (var p=0; p<window.allClusters.length-1; p++ )
+                {
+
+                    console.log("avgTime:"+ window.allClusters[p].averageTime);
+                    var cluster1index = window.allClusters[p].allcontainedTweets[0];
+                    var cluster2index = window.allClusters[p+1].allcontainedTweets[0];
+                    //var cluster1index = dbscan.cluster[p][0];
+                    //var cluster2index = dbscan.cluster[p+1][0];
+                    //drawconnectionCluster(allTweets[cluster1index],allTweets[cluster2index], window.allClusters[p].averageSentiment,window.allClusters[p+1].averageSentiment);	
+                }*/
+            }
+
+            /**
+* returns attributes and recalculates colors for cells
+* @deprecated
+*
+*/
+            function getAttributes(arraypos)
+            {
+
+                var attributes=[];
+
+
+                var compareToAll=true;
+
+
+                if(compareToAll)
+                {
+
+                    //totalDistance > max
+                    if(parseFloat(allHashtags[arraypos].totaldistance)>highestTrajectoryDistance)
+                    {
+                        highestTrajectoryDistance=allHashtags[arraypos].totaldistance;
+                    }
+
+
+                    //Highest Cluster
+                    if(allHashtags[arraypos].biggestCluster > highestClusterTweets)
+                    {
+                        highestClusterTweets =  allHashtags[arraypos].biggestCluster;
+                    }
+
+
+                    //Total Displacement    
+                    if(allHashtags[arraypos].displacement>highestDisplacement)
+                    {
+                        highestDisplacement=allHashtags[arraypos].displacement;
+                    }
+
+                    //Highest Variance    
+                    if(allHashtags[arraypos].speedvariance>highestSpeedVariance)
+                    {
+                        highestSpeedVariance=allHashtags[arraypos].speedvariance;
+                    }
+
+                    //Highest Retweet
+                    if(allHashtags[arraypos].maxRetweet>highestRetweet)
+                    {
+                        highestRetweet=allHashtags[arraypos].maxRetweet;
+                    }
+
+                    //Highest TimeVariance
+                    if(allHashtags[arraypos].timeVariance>highestTimeVariance)
+                    {
+                        highestTimeVariance=allHashtags[arraypos].timeVariance;
+                    }
+
+
+                    // highestClusterdistance   
+                    if(parseFloat(allHashtags[arraypos].clusterdistance)>highestClusterdistance)
+                    {
+                        highestClusterdistance=allHashtags[arraypos].clusterdistance;
+                    }
+
+                    //minimumCertainty
+                    if(parseFloat(allHashtags[arraypos].certaintyRatio)<lowestCertaintyRatio)
+                    {
+                        lowestCertaintyRatio=allHashtags[arraypos].certaintyRatio;
+                    }
+
+                    // highestdistancevariance
+                    if(parseFloat(allHashtags[arraypos].distancevariance)>highestDistancevariance)
+                    {
+                        highestDistancevariance=allHashtags[arraypos].distancevariance;
+                    }
+
+                    //  highestStatuscount  
+                    if(allHashtags[arraypos].maxStatuscount>highestStatuscount)
+                    {
+                        highestStatuscount=allHashtags[arraypos].maxStatuscount;
+                    }
+
+                    //highestFollowerscount
+                    if(allHashtags[arraypos].maxFollowers>highestFollowerscount)
+                    {
+                        highestFollowerscount=allHashtags[arraypos].maxFollowers;
+                    }
+
+                    //highestTimeDifference
+                    if(allHashtags[arraypos].MaxTimeDiff>highestTimeDifference)
+                    {
+                        highestTimeDifference=allHashtags[arraypos].MaxTimeDiff;
+                    }
+
+                    //highestSpeed
+                    if(parseFloat(allHashtags[arraypos].maxSpeed)>highestSpeed)
+                    {
+                        highestSpeed=allHashtags[arraypos].maxSpeed;
+                    }
+
+                    //highestFriends
+                    if(allHashtags[arraypos].maxFriendscount>highestFriends)
+                    {
+                        highestFriends=allHashtags[arraypos].maxFriendscount;
+                    }
+                    //highestClusteramount
+                    if(allHashtags[arraypos].clusters.length>highestClusteramount)
+                    {
+                        highestClusteramount=allHashtags[arraypos].clusters.length;
+                    }
+
+                    //highestAreaVariance
+                    if(allHashtags[arraypos].areavariance>highestAreaVariance)
+                    {
+                        highestAreaVariance=allHashtags[arraypos].areavariance;
+                    }
+
+                }
+
+
+                //TEMPORAL
+                var param = new Parameter("white",20,"test",0);
+                attributes.push(param);
+                //AVG Time Difference in Clusters
+
+                var avgtimediffcolor = d3.scale.linear()
+                .domain(d3.range(0, 1, 1.0 / (colours.length - 1)))
+                .range(colours);
+                var tc = d3.scale.linear().domain([0,highestTimeDifference]).range([0,1]);
+
+                param = new Parameter(avgtimediffcolor(tc(allHashtags[arraypos].AvgTimeDiff).toString()),(allHashtags[arraypos].AvgTimeDiff),"Average Time Difference",1);
+                attributes.push(param);
+
+
+
+                //Maximum Time Difference
+                var maxtimediffcolor = d3.scale.linear()
+                .domain(d3.range(0, 1, 1.0 / (colours.length - 1)))
+                .range(colours);
+
+                param = new Parameter(maxtimediffcolor(tc(allHashtags[arraypos].MaxTimeDiff).toString()),(allHashtags[arraypos].MaxTimeDiff),"Maximum Time Difference",2);
+                attributes.push(param);
+
+                //Minimum Time Difference
+                var mintimediffcolor = d3.scale.linear()
+                .domain(d3.range(0, 1, 1.0 / (colours.length - 1)))
+                .range(colours);
+
+                var timevac = d3.scale.linear().domain([0,highestTimeVariance]).range([0,1]);
+
+                param = new Parameter(mintimediffcolor(tc(allHashtags[arraypos].MinTimeDiff).toString()),(allHashtags[arraypos].MinTimeDiff),"Minimum Time Difference",3);
+                attributes.push(param);
+
+
+
+
+                var param = new Parameter(mintimediffcolor(timevac(allHashtags[arraypos].timeVariance).toString()),allHashtags[arraypos].timeVariance,"Time Variance",4);
+                attributes.push(param);
+
+
+                var td = d3.scale.linear().domain([0,1]).range([0,1]);
+                var param = new Parameter( mintimediffcolor(td(allHashtags[arraypos].topicSimpson).toString()),allHashtags[arraypos].topicSimpson,"Simpson Diversity value",5);
+                attributes.push(param);
+
+                //TOPICAL
+
+                //Positive Sentiment
+                var sentcolor = d3.scale.linear()
+                .domain(d3.range(0, 1, 1.0 / (colours.length - 1)))
+                .range(colours);
+
+
+
+                var c = d3.scale.linear().domain([0,100]).range([0,1]);
+
+                param = new Parameter(sentcolor(c(allHashtags[arraypos].positivePortion).toString()),(allHashtags[arraypos].positivePortion)+ "%","Amount Positive Tweets",6);
+                attributes.push(param);
+
+                //Negative Sentiment        
+                param = new Parameter(sentcolor(c(allHashtags[arraypos].negativePortion).toString()),(allHashtags[arraypos].negativePortion)+ "%","Amount Negative Tweets",7);
+                attributes.push(param);
+
+                //Neutral Sentiment 
+                param = new Parameter(sentcolor(c(allHashtags[arraypos].neutralPortion).toString()),(allHashtags[arraypos].neutralPortion) + "%","Neutral Tweets Portion",8);
+                attributes.push(param);
+
+                var ul = d3.scale.linear().domain([lowestCertaintyRatio,1]).range([0,1]);
+                //Uncertainty Level
+                param = new Parameter(sentcolor(ul(allHashtags[arraypos].certaintyRatio).toString()),(allHashtags[arraypos].certaintyRatio),"Certainty Ratio",9);
+                attributes.push(param);
+
+                //Credibility
+                var credc = d3.scale.linear().domain([0,7]).range([0,1]);
+                param = new Parameter(sentcolor(credc(allHashtags[arraypos].avgcred).toString()),allHashtags[arraypos].avgcred,"Average Credibility (0-7)",10);
+                attributes.push(param);
+
+
+                var senttc = d3.scale.linear().domain([0,100]).range([0,1]);
+                var param = new Parameter(sentcolor(senttc(allHashtags[arraypos].sentimentturnratio).toString()),allHashtags[arraypos].sentimentturns,"Sentiment turn ratio: "+allHashtags[arraypos].sentimentturnratio+"% , Sentiment Turns",11);
+
+
+
+                var distvar = d3.scale.linear().domain([0,highestDistancevariance]).range([0,1]); 
+                attributes.push(param);
+                var param = new Parameter(sentcolor(distvar(allHashtags[arraypos].distancevariance).toString()),allHashtags[arraypos].distancevariance,"Distanz Variance",12);
+                attributes.push(param);
+
+                //GEOSPATIAL
+
+                //Total Trajectory Distance
+                var trajectorydistc = d3.scale.linear().domain([0,highestTrajectoryDistance]).range([0,1]);
+                param = new Parameter(sentcolor(trajectorydistc(allHashtags[arraypos].totaldistance).toString()),allHashtags[arraypos].totaldistance,"Total Trajectory Distance in km",13);
+                attributes.push(param);
+
+                //Displacement
+                var displacementc = d3.scale.linear().domain([0,highestDisplacement]).range([0,1]);
+                param = new Parameter(sentcolor(displacementc(allHashtags[arraypos].displacement).toString()),allHashtags[arraypos].displacement," Displacement in km",14);
+                attributes.push(param);
+
+                //Avg Cluster Distance
+                var clusterdistc = d3.scale.linear().domain([0,highestClusterdistance]).range([0,1]);
+                param = new Parameter(sentcolor(clusterdistc(allHashtags[arraypos].clusterdistance).toString()),allHashtags[arraypos].clusterdistance," Cluster Distance in km",15);
+                attributes.push(param);
+
+                //AVG Subsequence Speed
+                var speedc = d3.scale.linear().domain([0,highestSpeed]).range([0,1]);
+                param = new Parameter(sentcolor(speedc(allHashtags[arraypos].avgSpeed).toString()),allHashtags[arraypos].avgSpeed," Average Subsequence Speed km/h",16);
+                attributes.push(param);
+
+                //Min Subsequence Speed
+                param = new Parameter(sentcolor(speedc(allHashtags[arraypos].minSpeed).toString()),allHashtags[arraypos].minSpeed,"Minimum Subsequence Speed km/h",17);
+                attributes.push(param);
+
+                //Max Subsequence Speed
+                param = new Parameter(sentcolor(speedc(allHashtags[arraypos].maxSpeed).toString()),allHashtags[arraypos].maxSpeed,"Maximum Subsequence Speed km/h",18);
+                attributes.push(param);
+
+
+                var speedvar = d3.scale.linear().domain([0,highestSpeedVariance]).range([0,1]);
+
+                //Area Covered
+                param = new Parameter(sentcolor(speedvar(allHashtags[arraypos].speedvariance).toString()),allHashtags[arraypos].speedvariance,"Speed Variance in km/h",19);
+                attributes.push(param);
+
+
+                var areavar = d3.scale.linear().domain([0,highestAreaVariance]).range([0,1]);
+                //Area Covered areavariance
+                var param = new Parameter(sentcolor(areavar(allHashtags[arraypos].areavariance).toString()),allHashtags[arraypos].areavariance,"Cluster Area radius variance",20);
+                attributes.push(param);
+
+
+
+                var turnpointsratioc = d3.scale.linear().domain([0,100]).range([0,1]);
+                //Turning points ratio
+                var param = new Parameter(sentcolor(turnpointsratioc(allHashtags[arraypos].turnpointratio).toString()),allHashtags[arraypos].turnpointratio,"Turning points ratio",21);
+                attributes.push(param);
+
+                //TWITTER METADATA
+                var friendc = d3.scale.linear().domain([0,highestFriends]).range([0,1]);
+                //AVG Friendscount
+                param = new Parameter(sentcolor(friendc(allHashtags[arraypos].avgFriendscount).toString()),allHashtags[arraypos].avgFriendscount,"Average Friendscount",22);
+                attributes.push(param);
+
+                //MAX Friendscount
+                param = new Parameter(sentcolor(friendc(allHashtags[arraypos].maxFriendscount).toString()),allHashtags[arraypos].maxFriendscount,"Maximum Friendscount",23);
+                attributes.push(param);
+
+                //MIN Friendscount
+                param = new Parameter(sentcolor(friendc(allHashtags[arraypos].minFriendscount).toString()),allHashtags[arraypos].minFriendscount,"Minimum Friendscount",24);
+                attributes.push(param);
+
+                //AVG Retweeted
+                var avgretweetc = d3.scale.linear().domain([0,highestRetweet]).range([0,1]);
+                param = new Parameter(sentcolor(avgretweetc(allHashtags[arraypos].avgRetweet).toString()),allHashtags[arraypos].avgRetweet,"Average Retweets",25);
+                attributes.push(param);
+
+                //Min Retweeted
+                var minretweetc = d3.scale.linear().domain([0,minimumRetweet]).range([0,1]);
+                param = new Parameter(sentcolor(minretweetc(allHashtags[arraypos].minRetweet).toString()),allHashtags[arraypos].minRetweet,"Minimum Retweets",26);
+                attributes.push(param);
+
+                //Max Statuscount
+                var avgstatusc = d3.scale.linear().domain([0,highestStatuscount]).range([0,1]);
+                param = new Parameter(sentcolor(avgstatusc(allHashtags[arraypos].maxRetweet).toString()),allHashtags[arraypos].maxRetweet,"Maximum Retweets",27);
+                attributes.push(param);
+
+                //AVG Statuscount
+                param = new Parameter(sentcolor(avgstatusc(allHashtags[arraypos].avgStatuscount).toString()),allHashtags[arraypos].avgStatuscount,"Average Statuscount",28);
+                attributes.push(param);
+
+                //Min Statuscount
+                param = new Parameter(sentcolor(avgstatusc(allHashtags[arraypos].minStatuscount).toString()),allHashtags[arraypos].minStatuscount,"Minimum Statuscount",29);
+                attributes.push(param);
+
+                //Max Statuscount
+                param = new Parameter(sentcolor(avgstatusc(allHashtags[arraypos].maxStatuscount).toString()),allHashtags[arraypos].maxStatuscount,"Maximum Statuscount",30);
+                attributes.push(param);
+
+                //AVG Followerscount
+                var avgfollowersc = d3.scale.linear().domain([0,highestFollowerscount]).range([0,1]);
+                param = new Parameter(sentcolor(avgfollowersc(allHashtags[arraypos].avgFollowers).toString()),allHashtags[arraypos].avgFollowers,"Average Followerscount",31);
+                attributes.push(param);
+
+                //Min Followerscount
+
+                param = new Parameter(sentcolor(avgfollowersc(allHashtags[arraypos].minFollowers).toString()),allHashtags[arraypos].minFollowers,"Minimum Followerscount",32);
+                attributes.push(param);
+
+                //Max Followerscount
+                param = new Parameter(sentcolor(avgfollowersc(allHashtags[arraypos].maxFollowers).toString()),allHashtags[arraypos].maxFollowers,"Maximum Followerscount",33);
+                attributes.push(param);
+
+                //Influence
+                //param = new Parameter("0x000000",20,"Not yet Implemented",34);
+                //attributes.push(param);
+
+                return attributes;
+            }
+
+
+            function updateRectData()
+            {
+
+                var ArrayofRankedElements = $(".rankedlist");
+
+
+                for ( var t=0; t<ArrayofRankedElements.length; t++)
+                {
+                    var running=false;
+                    var hashid =$(ArrayofRankedElements[t]).attr('id').replace('rankedlistelement','');
+                    if(getHashtagFromAll(hashid).calculationReady===true && running ===false)
+                    {
+                        var arraypos = getHashtagPosition(hashid);
+                        console.log("Hashid "+hashid+" Arrayposition:"+arraypos);
+                        var attributes = getAttributes(arraypos);
+                        running=true;
+
+
+
+
+
+
+
+                        // $(elementtoupdate).html("<img src=\"../img/readysmall.png\"/>");
+                        //$(clustersnumtoupdate).html(allHashtags[arraypos].clusters.length);
+
+
+                        //Show all parameters results
+
+                        var sqaurecontid = "#featuresSquare"+hashid;
+
+                        $(sqaurecontid).empty();
+                        var squareContainer = d3.select(sqaurecontid).append("svg")
+                        .attr("width", 810)
+                        .attr("height", 20);
+
+                        var rectangle = squareContainer.selectAll("rect")
+                        .data(attributes)
+                        .enter()
+                        .append("rect")
+
+
+                        var tectAttributes = rectangle
+                        .attr("x", function (d) { return (20*d.posi)+d.posi; })
+                        .attr("y", function (d) { return 0; })
+                        .attr('stroke', '#cccccc')
+                        .attr('stroke-width', '1')
+                        .attr("width", function (d) { return 20; })
+                        .attr("height", function (d) { return 20; })
+                        .style("fill", function(d) { return d.color; });
+                    }
+                }
+            }
+
+
+
+            function givetime()
+            {
+                var end = new Date().getTime();
+
+
+            }
+            /**
+* getHashtags helper function
+*
+*
+*/
+            var getHashtagFromAll = function(theid) {
+                for (var i = 0, len = allHashtags.length; i < len; i++) {
+                    if (allHashtags[i].hashid === theid)
+                        return allHashtags[i]; // Return as soon as the object is found
+                }
+                return null; // The object was not found
+            }
+            /**
+* returns the hashtag position of id theid
+*
+*
+*/
+            var getHashtagPosition = function(theid) {
+                for (var i = 0, len = allHashtags.length; i < len; i++) {
+                    if (allHashtags[i].hashid === theid)
+                        return i; // Return as soon as the object is found
+                }
+                return null; // The object was not found
+            }
+
+
+            /**
+* returns the color for a given topic
+*
+*
+*/
+            function getTopicColor(topic)
+            {
+
+                switch(topic) {
+                    case  "Computers & Technology":
+                        return "#a6cee3"
+                        break;
+                    case "Education":
+                        return "#1f78b4"
+                        break;
+                    case "Family":
+                        return "#b2df8a"
+                        break;
+                    case "Food":
+                        return "#33a02c"
+                        break;
+                    case "Health":
+                        return "#fb9a99"
+                        break;
+                    case "Marketing":
+                        return "#e31a1c"
+                        break;
+                    case "Music":
+                        return "#fdbf6f"
+                        break;
+                    case "News & Media":
+                        return "#ff7f00"
+                        break;
+                    case "Other":
+                        return "#cab2d6"
+                        break;
+                    case "Pets":
+                        return "#6a3d9a"
+                        break;
+                    case "Politics":
+                        return "#ffff99"
+                        break;
+                    case "Recreation & Sports":
+                        return "#b15928"
+                        break;
+                    default:
+                        return "#000000";
+                } 
+
+            }
+
+            setAngle = function (element, angle) {
+                angle = angle*-1;
+                $(element).css('-webkit-transform', 'rotate(' + angle + 'deg)')
+                .css('-moz-transform', 'rotate(' + angle + 'deg)')
+                .css('-o-transform', 'rotate(' + angle + 'deg)')
+                .css('-ms-transform', 'rotate(' + angle + 'deg)')
+                .css('transform', 'rotate(' + angle + 'deg)');
+            }
+
+            /*
+* creates cell visualization
+*
+*
+*/
+            function createVisCub(hashtag)
+            {
+
+                var wheretocreatevis = "#rldet"+hashtag.hashid;
+                // first dateset
+                //var current_date = new Date(2014,1,1,0,0,0,0);
+                //boston
+                //var current_date = new Date(2013,3,15,18,0,0,0);
+
+                //thesis_2
+                var current_date = new Date(2014,1,20,0,0,0,0);
+
+                var offset_mins = ((60*current_date.getHours()) + current_date.getMinutes()) - 970;
+                var offset_millis = offset_mins * 60 * 1000; 
+
+
+
+                context
+                .step(240000)
+                .serverDelay(offset_millis)
+                // Distance between data points in milliseconds
+                .size(720) // Number of data points
+                .stop(); // Fetching from a static data source; don't update values
+                d3.select(wheretocreatevis).append("div") // Add a vertical rule
+                .attr("class", "rule") // to the graph
+
+                .call(context.rule())
+
+                createSentimentRise(hashtag);
+            }
+
+            /**
+* adds data to the parallelcoordinates plot
+*
+*
+*/
+            function addParallelCoord(paralleldata)
+            {
+                var paracolor = d3.scale.linear()
+                .domain(d3.range(0, 1, 1.0 / (colours.length - 1)))
+                .range(colours);
+                var tc = d3.scale.linear().domain([0,highestClusteramount]).range([0,1]);
+
+
+
+
+                var sizecolor = function(d) { return paracolor(tc(d['clusteramount'])); };
+
+
+                var dimensions = ['hashtag','hashid','clusteramount','topicdiversity','speedvariance','sentimentlinearity','structurelinearity','displacementtourratio','credibilityvariance','timevariance','areavariance'];
+
+                var types={
+                    "hashtag":"string","hashid":"number","clusteramount":"number","topicdiversity":"number","speedvariance":"number","sentimentlinearity":"number","structurelinearity":"number","credibilityvariance":"number","timevariance":"number","displacementtourratio":"number","areavariance":"number"
+                }
+                //if(firstparcoord)
+                //{
+                firstparcoord=false;
+                $("#parallelcord").empty();
+                parcoords = d3.parcoords(
+                    {
+                        dimensionTitles: {
+                            hashtag:"Hashtag",
+                            hashid:"Hashid",
+                            clusteramount:"Clusters",
+                            topicdiversity:"Topic Diversity",
+                            structurelinearity: "Structure linearity",
+                            displacementtourratio: "Displacement-tour ratio",
+                            speedvariance: "Speed variance",
+                            sentimentlinearity: "Sentiment Linearity",
+                            credibilityvariance: "Credibility variance",
+                            timevariance: "Time variance",
+                            areavariance: "Area variance"
+                        }
+                    }
+                )("#parallelcord")
+                .color(sizecolor)
+
+                .data(paralleldata)
+
+                .smoothness(0)
+
+                .bundleDimension("topicdiversity")
+                .showControlPoints(false)
+                .alpha(0.6) 
+                .margin({ top: 24, left: 150, bottom: 12, right: 0 })
+                .dimensions(dimensions)
+                .hideAxis(["hashid"])
+                .render()
+
+                .brushMode("1D-axes") 
+                .reorderable();
+                console.log( ""+parcoords.dimensions());
+
+                parcoords.on("brush", function(d) {
+
+                    $("#sortedhashtags").children().hide();
+
+
+
+                    console.log(parcoords.data());
+                    for ( var s=0; s<parcoords.data().length; s++)
+                    {
+                        var hashtagelem = parcoords.data()[s]['hashtag'];
+                        var textg = $("text").filter(function() {
+                            return $(this).text() === hashtagelem;})
+
+                        textg.attr("opacity",0.1);
+                    }
+
+
+                    for (var x=0; x<d.length; x++)
+                    {
+
+                        var listelemt = "#rankedlistelement"+d[x]['hashid'];
+                        var hashtagelem = d[x]['hashtag'];
+                        var textg = $("text").filter(function() {
+                            return $(this).text() === hashtagelem;})
+
+                        textg.attr("opacity",1.0);
+                        $(listelemt).show();
+                    }
+                });
+
+
+                d3.select("#smoothness").on('change', function() {
+                    d3.select("#smooth").text(this.value);
+                    parcoords.smoothness(this.value).render();
+                });
+
+
+                // bundling strength slider
+                $("#bundling").on('change', function() {
+                    //parcoords.detectDimensions();
+                    d3.select("#strength").text(this.value);
+                    parcoords.bundlingStrength(this.value).render();
+                });
+
+
+                var select = d3.select("#selectdim").on("change", changeBundle);
+
+                var options = select.selectAll('option')
+                .data(parcoords.dimensions());
+
+
+
+                options
+                .enter()
+                .append("option")
+                .attr("value", function(d) {return d;})
+                .text(function(d) {return d;});
+                // }
+                /*else{
+                    parcoords
+
+                .data(paralleldata)
+
+                .margin({ top: 24, left: 150, bottom: 12, right: 0 })
+               .render()
+                .brushMode("1D-axes") 
+                .reorderable() ;
+
+
+
+                }*/
+
+
+                /*
+                var m = [30, 10, 10, 10],
+                    w = 1500 - m[1] - m[3],
+                    h = 500 - m[0] - m[2];
+
+                var x = d3.scale.ordinal().rangePoints([0, w], 1),
+                    y = {},
+                    dragging = {};
+
+                var line = d3.svg.line(),
+                    axis = d3.svg.axis().orient("left"),
+                    background,
+                    foreground;
+
+                var svgparallel = d3.select("#parallelcord").append("svg")
+                .attr("width", w + m[1] + m[3])
+                .attr("height", h + m[0] + m[2])
+                .append("g")
+                .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+                d3.csv("cars.csv", function(error, cars) {
+
+                    // Extract the list of dimensions and create a scale for each.
+                    x.domain(dimensions = d3.keys(cars[0]).filter(function(d) {
+                        return d != "name" && (y[d] = d3.scale.linear()
+                                               .domain(d3.extent(cars, function(p) { return +p[d]; }))
+                                               .range([h, 0]));
+                    }));
+
+
+
+                    // Add grey background lines for context.
+                    background = svgparallel.append("g")
+                    .attr("class", "background")
+                    .selectAll("path")
+                    .data(cars)
+                    .enter().append("path")
+                    .attr("d", path);
+
+                    // Add blue foreground lines for focus.
+                    foreground = svgparallel.append("g")
+                    .attr("class", "foreground")
+                    .selectAll("path")
+                    .data(cars)
+                    .enter().append("path")
+                    .attr("d", path);
+
+                    // Add a group element for each dimension.
+                    var g = svgparallel.selectAll(".dimension")
+                    .data(dimensions)
+                    .enter().append("g")
+                    .attr("class", "dimension")
+                    .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
+                    .call(d3.behavior.drag()
+                          .on("dragstart", function(d) {
+                        dragging[d] = this.__origin__ = x(d);
+                        background.attr("visibility", "hidden");
+                    })
+                          .on("drag", function(d) {
+                        dragging[d] = Math.min(w, Math.max(0, this.__origin__ += d3.event.dx));
+                        foreground.attr("d", path);
+                        dimensions.sort(function(a, b) { return position(a) - position(b); });
+                        x.domain(dimensions);
+                        g.attr("transform", function(d) { return "translate(" + position(d) + ")"; })
+                    })
+                          .on("dragend", function(d) {
+                        delete this.__origin__;
+                        delete dragging[d];
+                        transition(d3.select(this)).attr("transform", "translate(" + x(d) + ")");
+                        transition(foreground)
+                        .attr("d", path);
+                        background
+                        .attr("d", path)
+                        .transition()
+                        .delay(500)
+                        .duration(0)
+                        .attr("visibility", null);
+                    }));
+
+                    // Add an axis and title.
+                    g.append("g")
+                    .attr("class", "axis")
+                    .each(function(d) { d3.select(this).call(axis.scale(y[d])); })
+                    .append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("y", -9)
+                    .text(String);
+
+                    // Add and store a brush for each axis.
+                    g.append("g")
+                    .attr("class", "brush")
+                    .each(function(d) { d3.select(this).call(y[d].brush = d3.svg.brush().y(y[d]).on("brushstart", brushstart).on("brush", brush)); })
+                    .selectAll("rect")
+                    .attr("x", -8)
+                    .attr("width", 16);
+                });*/
+
+                function position(d) {
+                    var v = dragging[d];
+                    return v == null ? x(d) : v;
+                }
+
+                function transition(g) {
+                    return g.transition().duration(500);
+                }
+
+                // Returns the path for a given data point.
+                function path(d) {
+                    return line(dimensions.map(function(p) { return [position(p), y[p](d[p])]; }));
+                }
+
+                // When brushing, don’t trigger axis dragging.
+                function brushstart() {
+                    d3.event.sourceEvent.stopPropagation();
+                }
+
+                // Handles a brush event, toggling the display of foreground lines.
+                function brush() {
+                    var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
+                        extents = actives.map(function(p) { return y[p].brush.extent(); });
+                    foreground.style("display", function(d) {
+                        return actives.every(function(p, i) {
+                            return extents[i][0] <= d[p] && d[p] <= extents[i][1];
+                        }) ? null : "none";
+                    });
+                }
+
+                function changeBundle() {
+                    parcoords.bundleDimension(this.value);
+                }
+
+
+            }
+
+
+
+            /**
+* creates the boxplot for a hashtag
+*
+*
+*/
+            function createBoxPlot(hashtag)
+            {
+                var minute = 1000 * 60;
+                var hour = minute * 60;
+                var day = hour * 24;
+                var currenthash= getHashtagFromAll(hashtag.hashid);
+                console.log(currenthash.clusters);
+                var data = [];
+
+                //first dataset
+                /* 
+                var startTime = new Date(2014,1,1,0,0,0,0);
+                var endTime = new Date(2014,1,3,0,0,0,0);
+
+                */
+                //Boston first appearence
+                /*
+                 var startTime = new Date(2013,3,15,20,0,0,0);
+                var endTime = new Date(2013,3,16,1,0,0,0);
+                  */
+
+
+                //thesis 2 data
+
+                var startTime = new Date(2014,1,20,0,0,0,0);
+                var endTime = new Date(2014,1,22,0,0,0,0);
+
+
+
+                console.log(startTime);
+                var timespan = (endTime.getTime()-startTime.getTime())/hour;
+                console.log(timespan);
+
+                var min = Infinity,
+                    max = -Infinity;
+                var hashclusters = currenthash.clusters;
+                hashclusters = hashclusters.sort(function(a,b){return a.timenode - b.timenode});
+
+                for ( var m=0; m<hashclusters.length; m++)
+                {
+                    data[m] = [];
+                    data[m][0]="Cluster "+ m;
+                    data[m][1]=[];
+                    var avg = new Date(Math.floor(hashclusters[m].timenode))
+                    console.log(avg);
+                    data[m][2] = (avg.getTime()-startTime.getTime())/hour;
+
+
+                    for (var j=0; j < hashclusters[m].tweetsincluster.length; j++)
+                    {
+
+                        var differenz =( hashclusters[m].tweetsincluster[j].creationDate.getTime()-startTime.getTime())/hour;
+                        data[m][1].push(differenz);
+
+
+                        if(differenz> max)
+                        {
+                            max = differenz;
+                        }
+                        if (differenz < min)
+                        {
+                            min=differenz;
+                        }
+
+                    }
+                }
+
+
+
+                var wheretocreatevis = "#boxplot"+hashtag.hashid;
+                var clusterclass = "cluster"+hashtag.hashid;
+
+
+                var labels = false; // show the text labels beside individual boxplots?
+
+                var margin = {top: 30, right: 50, bottom: 70, left: 50};
+                var  width = 500 - margin.left - margin.right;
+                var height = 400 - margin.top - margin.bottom;
+
+
+                var chart = d3.box()
+                .whiskers(iqr(1.5))
+                .height(height)	
+                .domain([0, timespan])
+                .showLabels(labels);
+
+                var svg = d3.select(wheretocreatevis).append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .attr("class", "box")    
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                // the x-axis
+                var x = d3.scale.ordinal()	   
+                .domain( data.map(function(d) { console.log(d); return d[0] } ) )	    
+                .rangeRoundBands([0 , width], 0.7, 0.3); 		
+
+                var xAxis = d3.svg.axis()
+                .scale(x)
+                .orient("bottom");
+
+                // the y-axis
+                var y = d3.scale.linear()
+                .domain([min, max])
+                .range([height + margin.top, 0 + margin.top]);
+
+                var yAxis = d3.svg.axis()
+                .scale(y)
+                .orient("left");
+
+                // draw the boxplots	
+                svg.selectAll(".box")
+                .data(data)
+                .enter().append("g")
+                .attr("class",clusterclass )
+                .attr("transform", function(d) { return "translate(" +  x(d[0])  + "," + margin.top + ")"; } )
+                .call(chart.width(x.rangeBand())); 
+
+
+                // add a title
+                svg.append("text")
+                .attr("x", (width / 2))             
+                .attr("y", 0 + (margin.top / 2))
+                .attr("text-anchor", "middle")  
+                .style("font-size", "18px") 
+                //.style("text-decoration", "underline")  
+                .text("Cluster Time Boxplot");
+
+                // draw y axis
+                svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text") // and text1
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .style("font-size", "16px") 
+                .text("Time passed in hours");		
+
+                // draw x axis	
+                svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + (height  + margin.top + 10) + ")")
+                .call(xAxis)
+                .append("text")             // text label for the x axis
+                .attr("x", (width / 2) )
+                .attr("y",  10 )
+                .attr("dy", ".71em")
+
+
+
+
+
+            }
+
+            function iqr(k) {
+                return function(d, i) {
+                    var q1 = d.quartiles[0],
+                        q3 = d.quartiles[2],
+                        iqr = (q3 - q1) * k,
+                        i = -1,
+                        j = d.length;
+                    while (d[++i] < q1 - iqr);
+                    while (d[--j] > q3 + iqr);
+                    return [i, j];
+                };
+            }
+
+
+            function updateClusterTimenode(hashtag,clusterposition,value)
+            {
+
+                console.log(value);
+                var arraypos = getHashtagPosition(hashtag.hashid);
+                console.log( allHashtags[arraypos].clusters[clusterposition].timenode);
+                console.log(new Date( allHashtags[arraypos].clusters[clusterposition].timenode));
+
+                allHashtags[arraypos].clusters[clusterposition].timenode+=value;
+                console.log(new Date( allHashtags[arraypos].clusters[clusterposition].timenode));
+            }
+
+
+
+            /**
+* creates the horizon chart for each hashtag
+*
+*
+*/
+            function createSentimentRise(hashtag)
+            {
+
+                var wheretocreatevis = "#rldet"+hashtag.hashid;
+
+
+                //first dataset date
+                /*  var startTime = new Date(2014,1,1,0,0,0,0);
+                var endTime = new Date(2014,1,3,0,0,0,0);
+                 */
+
+                //Boston start date
+                /*
+              var startTime = new Date(2013,3,15,18,0,0,0);
+                 var endTime = new Date(2013,3,15,23,0,0,0);*/
+
+
+                //thesis 2
+
+                var startTime = new Date(2014,1,20,0,0,0,0);
+                var endTime = new Date(2014,1,22,0,0,0,0);
+
+
+                var tweetsinclustersofht = [];
+
+
+                for(var o=0; o<hashtag.clusters.length;o++)
+                {
+
+                    tweetsinclustersofht= tweetsinclustersofht.concat(hashtag.clusters[o].tweetsincluster);
+                }
+
+                var allTweetsinHT = tweetsinclustersofht;
+                allTweetsinHT = allTweetsinHT.sort(function(a,b){
+                    return a.creationDate - b.creationDate;
+                });
+
+                var currentTimeSpan = 0;
+                var amount=0;
+                var tweetshere=0;
+                var ctamount=0;
+                var eduamount=0;
+                var familyamount=0;
+                var foodamount=0;
+                var healthamount=0;
+                var marketingamount=0;
+                var musicamount=0;
+                var newsamount=0;
+                var otheramount=0;
+                var petsamount=0;
+                var politicsamount=0;
+                var recreationamount=0;
+                var uncertaintyamount=0;
+
+                sentimap = [];
+                ammap = [];
+                ctmap = [];
+                edumap = [];
+                foodmap = [];
+                familymap = [];
+                healthmap= [];
+                marketingmap= [];
+                musicmap=[];
+                newsmap=[];
+                othermap=[];
+                petsmap=[];
+                politicsmap=[];
+                recreationmap=[];
+                uncertaintymap=[];
+
+                var days = 1000*60*60*24;
+                var hours = 1000*60*60;
+                var qh = 1000*60*4;
+                var minutes = 1000*60;
+                var seconds = 1000;
+                var currentinterval = 0;
+                var timedifference = (endTime-startTime)/qh;
+                console.log("timedif="+timedifference);
+
+                for( var k=0; k<timedifference; k++)
+                {
+                    sentimap[k] = 0;
+                    ammap[k] = 0;
+
+                    ctmap[k] = 0;
+                    edumap[k] = 0;
+                    foodmap[k] = 0;
+                    familymap[k] = 0;
+                    healthmap[k]= 0;
+                    marketingmap[k]= 0;
+                    musicmap[k]=0;
+                    newsmap[k]=0;
+                    othermap[k]=0;
+                    petsmap[k]=0;
+                    politicsmap[k]=0;
+                    recreationmap[k]=0;
+                    uncertaintymap[k]= 0;
+                }
+
+                var lastindex=0;
+
+                for (var t=0; t<=timedifference ; t++)
+                {
+
+                    for( var s=lastindex; s<allTweetsinHT.length; s++ )
+                    {
+                        var difference = Math.abs(allTweetsinHT[s].creationDate - startTime)
+
+                        if(Math.floor((difference / qh)) >t)
+
+                        {
+                            lastindex=s;
+                            break;
+                        }
+                        else
+                        {
+                            amount+= 1*parseInt(allTweetsinHT[s].sentiment);
+                            tweetshere+=1;
+                            if(allTweetsinHT[s].category=="Computers & Technology")
+                            {
+                                ctamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Education")
+                            {
+                                eduamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Family")
+                            {
+                                familyamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Food")
+                            {
+                                foodamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Health")
+                            {
+                                healthamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Marketing")
+                            {
+                                marketingamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Music")
+                            {
+                                musicamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="News & Media")
+                            {
+                                newsamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Other")
+                            {
+                                otheramount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Pets")
+                            {
+                                petsamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Politics")
+                            {
+                                politicsamount+=1;
+                            }
+                            if(allTweetsinHT[s].category=="Recreation & Sports")
+                            {
+                                recreationamount+=1;
+                            }
+
+                            if(allTweetsinHT[s].uncertainty<1)
+                            {
+                                uncertaintyamount+=5*allTweetsinHT[s].uncertainty;
+                            }
+
+
+
+                        }
+
+                    }
+
+                    currentinterval++;
+                    sentimap[t]=amount;
+                    ammap[t]=tweetshere;
+
+                    //topics         
+                    ctmap[t] = ctamount;
+                    edumap[t] = eduamount;
+                    foodmap[t] = foodamount;
+                    familymap[t] = familyamount;
+                    healthmap[t] = healthamount;
+                    marketingmap[t] = marketingamount;
+                    musicmap[t] = musicamount;
+                    newsmap[t] = newsamount;
+                    othermap[t] = otheramount;
+                    petsmap[t] = petsamount;
+                    politicsmap[t] = politicsamount;
+                    recreationmap[t] = recreationamount;
+                    uncertaintymap[t]= uncertaintyamount;
+
+                }
+
+
+                window.sentimapJSON = JSON.stringify(sentimap);
+                //  console.log(sentimapJSON);
+                draw_graph_sent(["TWEETS","COMPUTERS","EDUCATION","FAMILY","FOOD","HEALTH","MARKETING","MUSIC","SENTIMENT","CERTAINTY"],hashtag);
+
+
+
+            }
+
+
+            /**
+* creates time dependant value map for the horizon chart for each attribute
+*
+*
+*/
+
+            function sent(name) {
+                return context.metric(function(start, stop, step, callback) {
+                    var values = [];
+                    if(name=="SENTIMENT")
+                    {
+                        for (var i=0; i<sentimap.length;i++)
+                        {
+
+                            values.push(sentimap[i]);
+                        }
+                    }
+                    else if(name=="TWEETS")
+                    {
+                        for (var i=0; i<ammap.length;i++)
+                        {
+
+                            values.push(ammap[i]);
+                        }  
+                    }
+                    else if(name=="COMPUTERS")
+                    {
+                        for (var i=0; i<ctmap.length;i++)
+                        {
+
+                            values.push(ctmap[i]);
+                        }  
+                    }
+                    else if(name=="EDUCATION")
+                    {
+                        for (var i=0; i<edumap.length;i++)
+                        {
+
+                            values.push(edumap[i]);
+                        }  
+                    }
+                    else if(name=="FAMILY")
+                    {
+                        for (var i=0; i<familymap.length;i++)
+                        {
+
+                            values.push(familymap[i]);
+                        }  
+                    }
+                    else if(name=="FOOD")
+                    {
+                        for (var i=0; i<foodmap.length;i++)
+                        {
+
+                            values.push(foodmap[i]);
+                        }  
+                    }
+                    else if(name=="HEALTH")
+                    {
+                        for (var i=0; i<healthmap.length;i++)
+                        {
+
+                            values.push(healthmap[i]);
+                        }  
+                    }
+                    else if(name=="MARKETING")
+                    {
+                        for (var i=0; i<marketingmap.length;i++)
+                        {
+
+                            values.push(marketingmap[i]);
+                        }  
+                    }
+                    else if(name=="MUSIC")
+                    {
+                        for (var i=0; i<musicmap.length;i++)
+                        {
+
+                            values.push(musicmap[i]);
+                        }  
+                    }
+                    else if(name=="NEWS & MEDIA")
+                    {
+                        for (var i=0; i<newsmap.length;i++)
+                        {
+
+                            values.push(newsmap[i]);
+                        }  
+                    }
+                    else if(name=="OTHER")
+                    {
+                        for (var i=0; i<othermap.length;i++)
+                        {
+
+                            values.push(othermap[i]);
+                        }  
+                    }
+                    else if(name=="PETS")
+                    {
+                        for (var i=0; i<petsmap.length;i++)
+                        {
+
+                            values.push(petsmap[i]);
+                        }  
+                    }
+                    else if(name=="POLITICS")
+                    {
+                        for (var i=0; i<politicsmap.length;i++)
+                        {
+
+                            values.push(politicsmap[i]);
+                        }  
+                    }
+                    else if(name=="RECREATION & SPORTS")
+                    {
+                        for (var i=0; i<recreationmap.length;i++)
+                        {
+
+                            values.push(recreationmap[i]);
+                        }  
+                    }
+                    else if(name=="CERTAINTY")
+                    {
+                        for (var i=0; i<uncertaintymap.length;i++)
+                        {
+
+                            values.push(uncertaintymap[i]);
+                        }  
+                    }
+                    callback(null, values);
+                },name);    
+            }
+
+            function amountmap(name) {
+                return context.metric(function(start, stop, step, callback) {
+                    var values = [];
+
+                    for (var i=0; i<ammap.length;i++)
+                    {
+
+                        values.push(ammap[i]);
+                    }
+                    callback(null, values);
+                },name);    
+            }
+
+
+
+            function draw_graph_sent(sent_list,hashtag) {
+
+                var wheretocreatevis = "#rldet"+hashtag.hashid;
+
+                d3.select(wheretocreatevis) // Select the div on which we want to act
+
+                .selectAll(".axis") // This is a standard D3 mechanism to
+                .data(["top"]) // bind data to a graph. In this case
+                .enter() // we're binding the axes "top" and "bottom".
+                .append("div") // Create two divs and
+                .attr("class", function(d) { // give them the classes
+                    return d + " axis"; // top axis and bottom axis
+                }) // respectively
+                .each(function(d) { // For each of these axes,
+                    d3.select(this) // draw the axes with 4 intervals
+                    .call(context.axis() // and place them in their proper places
+                          .ticks(d3.time.hours, 3));
+                });
+                d3.select(wheretocreatevis)
+                .selectAll(".horizon")
+                .data(sent_list.map(sent))  
+                .enter()
+                .insert("div", ".bottom") // Insert the graph in a div
+                .attr("class", "horizon") // Turn the div into
+                .call(context.horizon()
+                      .colors(colours)
+                      .extent([500,500])
+                      .height(40)// a horizon graph
+
+                     ); // Format the values to 2 floating-point decimals
+                context.on("focus", function(i) {
+                    d3.selectAll(".value").style("right", // Make the rule coincide
+                                                 i == null ? null : context.size() - i + "px"); // with the mouse
+                });
+            }
+
+
+
+
+            $(document).on('click','.list-rotated span',function(){
+                if(calculating===false)
+                {
+                    sortRankedByValue($(this).attr('id'));
+                }
+            });
+
+            $(document).on('click','#tweets',function(){
+                if(calculating===false)
+                {
+                    sortRankedByValue($(this).attr('id'));
+                }
+            });
+
+            $(document).on('click','#clusters',function(){
+                if(calculating===false)
+                {
+                    sortRankedByValue($(this).attr('id'));
+                }
+            });
+
+
+            /**
+* adds sorting function to each attribute
+*
+*
+*/
+
+            function sortRankedByValue(val)
+            {
+
+                var ArrayToSort = $(".rankedlist");
+
+
+
+                ArrayToSort.sort(function (a, b) {
+
+                    var idA =$(a).attr('id').replace('rankedlistelement','');
+                    var idB = $(b).attr('id').replace('rankedlistelement','');
+                    var contentA = new Number();
+                    var contentB = new Number();
+
+
+
+
+                    if(val==='avgfriends')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).avgFriendscount);
+                        contentB = parseFloat(getHashtagFromAll(idB).avgFriendscount)
+                    }
+                    else if (val==='clusters')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).clusters.length);
+                        contentB = parseFloat(getHashtagFromAll(idB).clusters.length);
+                    }
+
+                    else if (val==='tweets')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).tweets.length);
+                        contentB = parseFloat(getHashtagFromAll(idB).tweets.length);
+                    }
+
+                    else if (val==='credibility')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).avgcred);
+                        contentB = parseFloat(getHashtagFromAll(idB).avgcred);
+                    }
+
+                    else if (val==='uncertainty')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).certaintyRatio);
+                        contentB = parseFloat(getHashtagFromAll(idB).certaintyRatio);
+                    }
+
+                    else if (val==='neutral')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).neutralPortion);
+                        contentB = parseFloat(getHashtagFromAll(idB).neutralPortion);
+                    }
+
+                    else if (val==='positive')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).positivePortion);
+                        contentB = parseFloat(getHashtagFromAll(idB).positivePortion);
+                    }
+                    else if (val==='negative')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).negativePortion);
+                        contentB = parseFloat(getHashtagFromAll(idB).negativePortion);
+                    }
+
+                    else if (val==='mintimediff')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).MinTimeDiff);
+                        contentB = parseFloat(getHashtagFromAll(idB).MinTimeDiff);
+                    }
+
+                    else if (val==='avgtimediff')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).AvgTimeDiff);
+                        contentB = parseFloat(getHashtagFromAll(idB).AvgTimeDiff);
+                    }
+
+                    else if (val==='maxtimediff')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).MaxTimeDiff);
+                        contentB = parseFloat(getHashtagFromAll(idB).MaxTimeDiff);
+                    }
+
+
+                    else if (val==='totaldistance')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).totaldistance);
+                        contentB = parseFloat(getHashtagFromAll(idB).totaldistance);
+                    }
+                    else if (val==='displacement')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).displacement);
+                        contentB = parseFloat(getHashtagFromAll(idB).displacement);
+                    }
+                    else if (val==='avgclusterdistance')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).clusterdistance);
+                        contentB = parseFloat(getHashtagFromAll(idB).clusterdistance);
+                    }
+                    else if (val==='avgspeed')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).avgSpeed);
+                        contentB = parseFloat(getHashtagFromAll(idB).avgSpeed);
+                    }
+                    else if (val==='minspeed')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).minSpeed);
+                        contentB = parseFloat(getHashtagFromAll(idB).minSpeed)
+                    }
+                    else if (val==='maxspeed')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).maxSpeed);
+                        contentB = parseFloat(getHashtagFromAll(idB).maxSpeed);
+                    }
+                    else if (val==='avgfriends')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).avgFriendscount);
+                        contentB = parseFloat(getHashtagFromAll(idB).avgFriendscount);
+                    }
+                    else if (val==='minfriends')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).minFriendscount);
+                        contentB = parseFloat(getHashtagFromAll(idB).minFriendscount);
+                    }
+                    else if (val==='maxfriends')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).maxFriendscount);
+                        contentB = parseFloat(getHashtagFromAll(idB).maxFriendscount);
+                    }
+                    else if (val==='avgretweet')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).avgRetweet);
+                        contentB = parseFloat(getHashtagFromAll(idB).avgRetweet);
+                    }
+                    else if (val==='minretweet')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).minRetweet);
+                        contentB = parseFloat(getHashtagFromAll(idB).minRetweet);
+                    }
+                    else if (val==='maxretweet')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).maxRetweet);
+                        contentB = parseFloat(getHashtagFromAll(idB).maxRetweet);
+                    }
+                    else if (val==='avgstatuscount')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).avgStatuscount);
+                        contentB = parseFloat(getHashtagFromAll(idB).avgStatuscount);
+                    }
+                    else if (val==='minstatuscount')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).minStatuscount);
+                        contentB = parseFloat(getHashtagFromAll(idB).minStatuscount);
+                    }
+                    else if (val==='maxstatuscount')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).maxStatuscount);
+                        contentB = parseFloat(getHashtagFromAll(idB).maxStatuscount);
+                    }
+                    else if (val==='avgfollowerscount')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).avgFollowers);
+                        contentB = parseFloat(getHashtagFromAll(idB).avgFollowers);
+                    }
+                    else if (val==='minfollowerscount')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).minFollowers);
+                        contentB = parseFloat(getHashtagFromAll(idB).minFollowers);
+                    }
+                    else if (val==='maxfollowerscount')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).maxFollowers);
+                        contentB = parseFloat(getHashtagFromAll(idB).maxFollowers);
+                    }
+                    else if (val==='timeVariance')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).timeVariance);
+                        contentB = parseFloat(getHashtagFromAll(idB).timeVariance);
+                    }
+                    else if (val==='topicSimpson')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).topicSimpson);
+                        contentB = parseFloat(getHashtagFromAll(idB).topicSimpson);
+                    }
+                    else if (val==='sentimentturnratio')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).sentimentturnratio);
+                        contentB = parseFloat(getHashtagFromAll(idB).sentimentturnratio);
+                    }
+                    else if (val==='distancevariance')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).distancevariance);
+                        contentB = parseFloat(getHashtagFromAll(idB).distancevariance);
+                    }
+                    else if (val==='turnpointratio')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).turnpointratio);
+                        contentB = parseFloat(getHashtagFromAll(idB).turnpointratio);
+                    }
+
+                    else if (val==='speedvariance')
+                    {
+                        contentA = parseFloat(getHashtagFromAll(idA).speedvariance);
+                        contentB = parseFloat(getHashtagFromAll(idB).speedvariance);
+                    }
+
+
+
+                    return (contentA > contentB) ? -1 : (contentA < contentB) ? 1 : 0;
+                });
+                $("#sortedhashtags").empty();
+                $("#sortedhashtags").append(ArrayToSort);  
+                $('svg rect').tipsy({ 
+                    gravity: 'w', 
+                    html: true, 
+                    title: function() {
+                        var d = this.__data__, val = d.val, info = d.name ;
+                        return d.name +' value:' + val; 
+                    }
+                });
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+
+        </script>
+
+        <div id="chooseHashtags" title="Choose Hashtags to visualize">
+            <div class="hashtaglist"><div class="hashtagtag">Hashtag</div><div class="amount">#Tweets</div><div class="hashtagshow">Analyze?</div><div class="hashtagstatusfirst">Status</div>
+                <hr>
+
+            </div>
+        </div>
+
+        <div id="rankedlist" title="Hashtag list">
+            <div id="paralleloptions">Smoothness <strong id="smooth">0.0</strong><br>
+                <input type="range" min="0" max="0.25" value="0.0" step="0.01" id="smoothness"><br>Bundling strength <strong id="strength">0</strong><br>
+                <input type="range" min="0" max="1" value="0" step="0.05" id="bundling"><br>
+                Bundle using clusters determined by:<br>
+                <div id="bundleDimension">
+                    <select id="selectdim"></select>
+                </div>
+            </div>
+            <div id="parallelcord" style="width:1000px;height:250px;" class="parcoords"></div>
+            <div style="clear:both"></div>
+            <hr>
+            <div class="rankedhashtaglist"><div id="tweetcontent"></div><div class="rankedlistdetailsheading">Details</div><div class="hashtagtagheading">Hashtag</div> <div class="amountheading"><span id="tweets">#Tweets</span></div><div class="clustersamountheading"><span id="clusters">#Clusters</span></div><div id="colorlegend"></div><div class="featuresheading">
+
+                <ul class="list-rotated">
+                    <li><span>Temporal</span></li>
+                    <li><span id="avgtimediff">AVG Time Difference in Clusters</span></li>
+                    <li><span id="maxtimediff">Maximum Time Difference</span></li>
+                    <li><span id="mintimediff">Minimum Time Difference</span></li>
+                    <li><span id="timeVariance">Time Variance</span></li>  
+                    <li><span id="topicSimpson">Topic Diversity</span></li>
+                    <li><span id="positive">Positive</span></li>
+                    <li><span id="negative">Negative</span></li>
+                    <li><span id="neutral">Neutral</span></li>
+                    <li><span id="uncertainty">Certainty</span></li>
+                    <li><span id="credibility">Credibility</span></li>
+
+                    <li><span id="sentimentturnratio">Sentiment Turns</span></li>  
+                    <li><span id="distancevariance">Distance Variance</span></li>
+                    <li><span id="totaldistance">Total Trajectory Distance</span></li>
+                    <li><span id="displacement">Displacement</span></li>
+                    <li><span id="avgclusterdistance">Avg Cluster Distance</span></li>
+                    <li><span id="avgspeed">AVG Speed</span></li>
+                    <li><span id="minspeed">Min Speed</span></li>
+                    <li><span id="maxspeed">Max Speed</span></li>
+                    <li><span id="speedvariance">Speed Variance</span></li>
+                    <li><span>Cluster Area Variance</span></li>
+
+                    <li><span id="turnpointratio">Turning Points</span></li>
+                    <li><span id="avgfriends">AVG Friendscount</span></li>
+                    <li><span id="maxfriends">Max Friendscount</span></li>
+                    <li><span id="minfriends">Min Friendscount</span></li>
+                    <li><span id="avgretweet">AVG Retweeted</span></li>
+                    <li><span id="minretweet">Min Retweeted</span></li>
+                    <li><span id="maxretweet">Max Retweeted</span></li>
+                    <li><span id="avgstatuscount">AVG Statuscount</span></li>
+                    <li><span  id="minstatuscount">Min Statuscount</span></li>
+                    <li><span  id="maxstatuscount">Max Statuscount</span></li>
+                    <li><span id="avgfollowerscount">AVG Followercount</span></li>
+                    <li><span id="minfollowerscount">Min Followercount</span></li>
+                    <li><span id="maxfollowerscount">Max Followercount</span></li>
+                    <li><span>Influence</span></li>
+
+                </ul>
+
+
+
+
+                </div>
+
+            </div><div class="anglesuminfotext">Angle</div><div class="rankedliststatusheading">Status</div><div class="hashtagshowrankedheading">Show/Hide<br>Trajectory</div><div class="hashtagshowrankedtweetsheading">Tweets</div><div style="clear:both"></div>
+            <hr>
+            <div id="sortedhashtags"></div>
+            <div id="rankingoptions">
+
+                <input type="button" id="rankingbutton" value="Ranking Parameters" class="rankparam" >
+            </div>
+
+
+        </div>
+
+        </div>
+
+
+    </body>
+</html>
